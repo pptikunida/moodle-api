@@ -19,8 +19,8 @@ func GetMoodleConfig() (string, string, error) {
 
 func NewMoodleForm(token, function string) url.Values {
 	form := url.Values{}
-	form.Set("token", token)
-	form.Set("function", function)
+	form.Set("wstoken", token)
+	form.Set("wsfunction", function)
 	form.Set("moodlewsrestformat", "json")
 	return form
 }

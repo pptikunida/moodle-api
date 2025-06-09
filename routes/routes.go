@@ -13,5 +13,6 @@ func SetupRouter(
 	api := r.Group("/api")
 	{
 		api.GET("/users/status", moodleController.CheckStatus)
+		api.POST("/users", moodleController.CreateUser)
 	}
 }

@@ -1,6 +1,6 @@
 package web
 
 type MoodleUserCreateResponse struct {
-	UserID   int    `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"username"`
 }

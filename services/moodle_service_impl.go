@@ -3,9 +3,11 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/rizkycahyono97/moodle-api/model/web"
 	"github.com/rizkycahyono97/moodle-api/utils/helpers"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -55,15 +57,7 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	return &status, nil
 }
 
-func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
-	// CreateUser bisa lebih dari satu
-	users := []web.MoodleUserCreateRequest{req}
-
-	// JSON-Encoded
-	usersJson, err := json.Marshal(users)
-	if err != nil {
-		return nil, err
-	}
+func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error) {
 
 	// Load Env & Moodle Request
 	moodleURL, token, err := helpers.GetMoodleConfig()
@@ -71,7 +65,46 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 		return nil, err
 	}
 	form := helpers.NewMoodleForm(token, "core_user_create_users")
-	form.Set("users", string(usersJson))
+
+	// Set array-style form fields sesuai format Moodle
+	form.Set("users[0][username]", req.Username)
+	form.Set("users[0][auth]", req.Auth)
+	form.Set("users[0][password]", req.Password)
+	form.Set("users[0][firstname]", req.Firstname)
+	form.Set("users[0][lastname]", req.Lastname)
+	form.Set("users[0][email]", req.Email)
+	if req.City != "" {
+		form.Set("users[0][city]", req.City)
+	}
+	if req.Country != "" {
+		form.Set("users[0][country]", req.Country)
+	}
+	if req.Timezone != "" {
+		form.Set("users[0][timezone]", req.Timezone)
+	}
+	if req.Description != "" {
+		form.Set("users[0][description]", req.Description)
+	}
+	if req.IdNumber != "" {
+		form.Set("users[0][idnumber]", req.IdNumber)
+	}
+	if req.Lang != "" {
+		form.Set("users[0][lang]", req.Lang)
+	}
+	if req.CalendarType != "" {
+		form.Set("users[0][calendartype]", req.CalendarType)
+	}
+	// Custom fields
+	for i, field := range req.CustomFields {
+		form.Set(fmt.Sprintf("users[0][customfields][%d][type]", i), field.Type)
+		form.Set(fmt.Sprintf("users[0][customfields][%d][value]", i), field.Value)
+	}
+
+	// Preferences
+	for i, pref := range req.Preferences {
+		form.Set(fmt.Sprintf("users[0][preferences][%d][type]", i), pref.Type)
+		form.Set(fmt.Sprintf("users[0][preferences][%d][value]", i), pref.Value)
+	}
 
 	// POST req to moodle
 	resp, err := s.client.PostForm(moodleURL, form)
@@ -86,6 +119,8 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 		return nil, err
 	}
 
+	log.Println("[CreateUser] Raw Response:", string(body)) // log
+
 	// Check for moodle error
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("Failed to create User: " + string(body))
@@ -93,10 +128,15 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 
 	// Parse Moodle success
 	var result []web.MoodleUserCreateResponse
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	if len(result) == 0 || result[0].ID == 0 {
+		log.Println("[CreateUser] Warning: Moodle returned empty or invalid user")
+		return nil, errors.New("No user returned or user invalid")
+	}
+
+	return &result[0], nil
 }

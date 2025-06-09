@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/model/web"
 	"github.com/rizkycahyono97/moodle-api/services"
+	"log"
 	"net/http"
 )
 
@@ -35,8 +37,11 @@ func (s *MoodleController) CheckStatus(c *gin.Context) {
 func (s *MoodleController) CreateUser(c *gin.Context) {
 	var req web.MoodleUserCreateRequest
 
+	fmt.Println("[DEBUG] Received Body:", req) // log
+
 	// Bind JSON
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[CreateUser] Error: %v", err) // log
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
 			Code:    "INVALID_PARAMS",
 			Message: err.Error(),
@@ -45,9 +50,12 @@ func (s *MoodleController) CreateUser(c *gin.Context) {
 		return
 	}
 
+	log.Printf("[CreateUser] Received Request: %+v", req) // log
+
 	// Call service
 	result, err := s.moodleService.CreateUser(req)
 	if err != nil {
+		log.Println("[CreateUser] Error:", err)
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: err.Error(),
