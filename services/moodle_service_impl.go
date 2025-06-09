@@ -94,13 +94,10 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.Mo
 	if req.CalendarType != "" {
 		form.Set("users[0][calendartype]", req.CalendarType)
 	}
-	// Custom fields
 	for i, field := range req.CustomFields {
 		form.Set(fmt.Sprintf("users[0][customfields][%d][type]", i), field.Type)
 		form.Set(fmt.Sprintf("users[0][customfields][%d][value]", i), field.Value)
 	}
-
-	// Preferences
 	for i, pref := range req.Preferences {
 		form.Set(fmt.Sprintf("users[0][preferences][%d][type]", i), pref.Type)
 		form.Set(fmt.Sprintf("users[0][preferences][%d][value]", i), pref.Value)
