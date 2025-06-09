@@ -160,7 +160,7 @@ func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) 
 
 	// Set parameter values[0], values[1]
 	for i, v := range req.Values {
-		form.Set(fmt.Sprintf("users[%d][value]", i), v)
+		form.Set(fmt.Sprintf("values[%d]", i), v)
 	}
 
 	// kirim POST ke moodle
@@ -170,18 +170,30 @@ func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) 
 	}
 	defer resp.Body.Close()
 
-	// slice untuk menampung response user
-	var result []web.MoodleUserGetByFieldResponse
-	if resp.StatusCode != http.StatusOK {
-		var errMsg map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&errMsg)
-		return nil, fmt.Errorf("error calling Moodle: %v", errMsg["message"])
+	// Baca response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	// parse JSON ke struct
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, fmt.Errorf("error calling Moodle: %v", err)
+	//debug
+	log.Printf("[DEBUG] Request Field: %s", req.Field)
+	log.Printf("[DEBUG] Request Values: %v", req.Values)
+	log.Printf("[DEBUG] Encoded Form: %v", form.Encode())
+	log.Printf("[DEBUG] Raw Moodle Response: %s", string(body))
+
+	// Cek apakah response mengandung error Moodle
+	var maybeError map[string]interface{}
+	if err := json.Unmarshal(body, &maybeError); err == nil {
+		if _, exists := maybeError["exception"]; exists {
+			return nil, fmt.Errorf("error from Moodle: %s", string(body))
+		}
+	}
+
+	// Jika tidak ada error, unmarshal ke slice of users
+	var result []web.MoodleUserGetByFieldResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal Moodle user response: %w", err)
 	}
 
 	// validasi jika tidak ada user yang ditemukan

@@ -14,5 +14,6 @@ func SetupRouter(
 	{
 		api.GET("/users/status", moodleController.CheckStatus)
 		api.POST("/users", moodleController.CreateUser)
+		api.POST("/users/lookup", moodleController.GetUserByField)
 	}
 }

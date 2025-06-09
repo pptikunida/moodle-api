@@ -17,8 +17,8 @@ type MoodleUserGetByFieldResponse struct {
 	FirstAccess       int                                  `json:"firstaccess,omitempty"`
 	LastAccess        int                                  `json:"lastaccess,omitempty"`
 	Auth              string                               `json:"auth,omitempty"`
-	Suspended         int                                  `json:"suspended,omitempty"`
-	Confirmed         int                                  `json:"confirmed,omitempty"`
+	Suspended         bool                                 `json:"suspended,omitempty"`
+	Confirmed         bool                                 `json:"confirmed,omitempty"`
 	Lang              string                               `json:"lang,omitempty"`
 	CalendarType      string                               `json:"calendartype,omitempty"`
 	Theme             string                               `json:"theme,omitempty"`
