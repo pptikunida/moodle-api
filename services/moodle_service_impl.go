@@ -3,11 +3,10 @@ package services
 import (
 	"encoding/json"
 	"errors"
-	"github.com/rizkycahyono97/moodle-api/config"
 	"github.com/rizkycahyono97/moodle-api/model/web"
+	"github.com/rizkycahyono97/moodle-api/utils/helpers"
 	"io"
 	"net/http"
-	"net/url"
 )
 
 type MoodleServiceImpl struct {
@@ -21,19 +20,12 @@ func NewMoodleService(client *http.Client) MoodleService {
 }
 
 func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
-	// Load Env
-	moodleURL := config.GetEnv("MOODLE_URL", "")
-	token := config.GetEnv("MOODLE_TOKEN", "")
-
-	if moodleURL == "" && token == "" {
-		return nil, errors.New("Moodle URL or Token is Empty")
+	// Load Env & Moodle Request
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil, err
 	}
-
-	// Data Request
-	form := url.Values{}
-	form.Set("wstoken", token)
-	form.Set("wsfunction", "core_webservice_get_site_info")
-	form.Set("moodlewsrestformat", "json")
+	form := helpers.NewMoodleForm(token, "core_webservice_get_site_info")
 
 	// Kirim POST request ke Moodle
 	resp, err := s.client.PostForm(moodleURL, form)
@@ -61,4 +53,50 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 		return nil, err
 	}
 	return &status, nil
+}
+
+func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
+	// CreateUser bisa lebih dari satu
+	users := []web.MoodleUserCreateRequest{req}
+
+	// JSON-Encoded
+	usersJson, err := json.Marshal(users)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load Env & Moodle Request
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil, err
+	}
+	form := helpers.NewMoodleForm(token, "core_user_create_users")
+	form.Set("users", string(usersJson))
+
+	// POST req to moodle
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// read body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for moodle error
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("Failed to create User: " + string(body))
+	}
+
+	// Parse Moodle success
+	var result []web.MoodleUserCreateResponse
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
