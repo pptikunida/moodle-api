@@ -31,7 +31,7 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 
 	// Data Request
 	form := url.Values{}
-	form.Set("token", token)
+	form.Set("wstoken", token)
 	form.Set("wsfunction", "core_webservice_get_site_info")
 	form.Set("moodlewsrestformat", "json")
 
@@ -47,6 +47,8 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	//fmt.Println(string(body)) // debug body asli moodle
 
 	// Status Code Check
 	if resp.StatusCode != http.StatusOK {

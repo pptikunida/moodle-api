@@ -8,7 +8,7 @@ type MoodleStatusFunction struct {
 
 type MoodleAdvancedFeature struct {
 	Name  string `json:"name"`
-	Value string `json:"value"`
+	Value int    `json:"value"`
 }
 
 type MoodleStatusResponse struct {

@@ -1,0 +1,17 @@
+package routes
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/rizkycahyono97/moodle-api/controllers"
+)
+
+func SetupRouter(
+	r *gin.Engine,
+	moodleController *controllers.MoodleController) {
+
+	// routes
+	api := r.Group("/api")
+	{
+		api.GET("/users/status", moodleController.CheckStatus)
+	}
+}
