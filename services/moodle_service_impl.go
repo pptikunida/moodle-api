@@ -36,7 +36,7 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	form.Set("moodlewsrestformat", "json")
 
 	// Kirim POST request ke Moodle
-	resp, err := s.client.PostForm(moodleURL, form
+	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
 		return nil, err
 	}
