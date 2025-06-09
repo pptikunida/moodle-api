@@ -137,3 +137,57 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.Mo
 
 	return &result[0], nil
 }
+
+func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error) {
+	// validasi field yang diperbolehkan
+	allowedFields := map[string]bool{
+		"id":       true,
+		"idnumber": true,
+		"username": true,
+		"email":    true,
+	}
+	if !allowedFields[req.Field] {
+		return nil, fmt.Errorf("Invalid field: %s", req.Field)
+	}
+
+	// Load env & moodle req
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil, err
+	}
+	form := helpers.NewMoodleForm(token, "core_user_get_users_by_field")
+	form.Set("field", req.Field)
+
+	// Set parameter values[0], values[1]
+	for i, v := range req.Values {
+		form.Set(fmt.Sprintf("users[%d][value]", i), v)
+	}
+
+	// kirim POST ke moodle
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		return nil, fmt.Errorf("error calling Moodle: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// slice untuk menampung response user
+	var result []web.MoodleUserGetByFieldResponse
+	if resp.StatusCode != http.StatusOK {
+		var errMsg map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errMsg)
+		return nil, fmt.Errorf("error calling Moodle: %v", errMsg["message"])
+	}
+
+	// parse JSON ke struct
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, fmt.Errorf("error calling Moodle: %v", err)
+	}
+
+	// validasi jika tidak ada user yang ditemukan
+	if len(result) == 0 {
+		return nil, errors.New("No user returned or invalid field")
+	}
+
+	return result, nil
+}
