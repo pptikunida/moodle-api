@@ -101,3 +101,31 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 		Data:    users,
 	})
 }
+
+func (s *MoodleController) UpdateUser(c *gin.Context) {
+	var req []web.MoodleUserUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "INVALID_PARAMS",
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	resp, err := s.moodleService.UpdateUsers(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, web.ApiResponse{
+			Code:    "INTERNAL_SERVER_ERROR",
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, web.ApiResponse{
+		Code:    "OK",
+		Message: "User Updated  Successfully",
+		Data:    resp,
+	})
+}
