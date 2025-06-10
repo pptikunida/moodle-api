@@ -203,3 +203,100 @@ func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) 
 
 	return result, nil
 }
+
+func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) ([]web.MoodleUserUpdateResponse, error) {
+	// Load config
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil, err
+	}
+	form := helpers.NewMoodleForm(token, "core_user_update_users")
+
+	// konversi array struct ke map string
+	for i, user := range req {
+		if user.ID == 0 {
+			return nil, fmt.Errorf("user ID is required for update")
+		}
+		form.Set(fmt.Sprintf("users[%d][id]", i), fmt.Sprintf("%d", user.ID))
+		if user.Username != "" {
+			form.Set(fmt.Sprintf("users[%d][username]", i), user.Username)
+		}
+		if user.Email != "" {
+			form.Set(fmt.Sprintf("users[%d][email]", i), user.Email)
+		}
+		if user.Firstname != "" {
+			form.Set(fmt.Sprintf("users[%d][firstname]", i), user.Firstname)
+		}
+		if user.Lastname != "" {
+			form.Set(fmt.Sprintf("users[%d][lastname]", i), user.Lastname)
+		}
+		if user.Auth != "" {
+			form.Set(fmt.Sprintf("users[%d][auth]", i), user.Auth)
+		}
+		//if user.Suspended != nil {
+		//	form.Set(fmt.Sprintf("users[%d][suspended]", i), fmt.Sprintf("%d", *user.Suspended))
+		//}
+		if user.Password != "" {
+			form.Set(fmt.Sprintf("users[%d][password]", i), user.Password)
+		}
+		if user.City != "" {
+			form.Set(fmt.Sprintf("users[%d][city]", i), user.City)
+		}
+		if user.Country != "" {
+			form.Set(fmt.Sprintf("users[%d][country]", i), user.Country)
+		}
+		if user.Description != "" {
+			form.Set(fmt.Sprintf("users[%d][description]", i), user.Description)
+		}
+		//if user.MailDisplay != nil {
+		//	form.Set(fmt.Sprintf("users[%d][maildisplay]", i), fmt.Sprintf("%d", *user.MailDisplay))
+		//}
+		if user.Timezone != "" {
+			form.Set(fmt.Sprintf("users[%d][timezone]", i), user.Timezone)
+		}
+		if user.Lang != "" {
+			form.Set(fmt.Sprintf("users[%d][lang]", i), user.Lang)
+		}
+		//custom field lain
+		for j, cf := range user.CustomFields {
+			form.Set(fmt.Sprintf("users[%d][customfields][%d][type]", i, j), cf.Type)
+			form.Set(fmt.Sprintf("users[%d][customfields][%d][value]", i, j), cf.Value)
+		}
+		// Preferences
+		for j, pref := range user.Preferences {
+			form.Set(fmt.Sprintf("users[%d][preferences][%d][type]", i, j), pref.Type)
+			form.Set(fmt.Sprintf("users[%d][preferences][%d][value]", i, j), pref.Value)
+		}
+	}
+
+	// kirim req ke moodle
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// baca resp body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response: %w", err)
+	}
+
+	// debug
+	log.Printf("[DEBUG] Moodle update response: %s", string(body))
+
+	// cek kemungkinan error dari moodle
+	var maybeError map[string]interface{}
+	if er := json.Unmarshal(body, &maybeError); er != nil {
+		if _, exists := maybeError["exception"]; exists {
+			return nil, fmt.Errorf("error from Moodle: %s", string(body))
+		}
+	}
+
+	// decode response
+	var result web.MoodleUserUpdateResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal Moodle user response: %w", err)
+	}
+	return []web.MoodleUserUpdateResponse{result}, nil
+}
