@@ -116,7 +116,7 @@ func (s *MoodleController) UpdateUser(c *gin.Context) {
 	//periksa jika ada data
 	err := s.moodleService.UpdateUsers(req)
 	if err != nil {
-		if moodleErr, ok := err.(*services.MoodleException); ok {
+		if moodleErr, ok := err.(*web.MoodleException); ok {
 			c.JSON(http.StatusBadRequest, web.ApiResponse{
 				Code:    moodleErr.ErrorCode,
 				Message: moodleErr.Message,

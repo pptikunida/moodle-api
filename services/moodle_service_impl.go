@@ -376,7 +376,7 @@ func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) error
 	log.Printf("[DEBUG] Moodle update response (status %d): %s", resp.StatusCode, string(body))
 
 	// check for moodle API if error
-	var moodleErr MoodleException
+	var moodleErr web.MoodleException
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Message != "" {
 		return &moodleErr
 	}
@@ -399,20 +399,4 @@ func (s *MoodleServiceImpl) checkDuplicateField(field string, value string) (boo
 		return false, err
 	}
 	return len(users) > 0, nil
-}
-
-// ========
-// COBA
-// ========
-// MoodleException represents the standard error structure returned by Moodle's API.
-type MoodleException struct {
-	Exception string `json:"exception"`
-	ErrorCode string `json:"errorcode"`
-	Message   string `json:"message"`
-	DebugInfo string `json:"debuginfo,omitempty"`
-}
-
-// Error implements the error interface for MoodleException.
-func (e *MoodleException) Error() string {
-	return fmt.Sprintf("moodle API error: %s (%s) - %s", e.Message, e.ErrorCode, e.Exception)
 }
