@@ -113,19 +113,27 @@ func (s *MoodleController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	resp, err := s.moodleService.UpdateUsers(req)
+	//periksa jika ada data
+	err := s.moodleService.UpdateUsers(req)
 	if err != nil {
+		if moodleErr, ok := err.(*services.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
-			Message: err.Error(),
-			Data:    nil,
+			Message: "An internal error occurred",
+			Data:    err.Error(), // Kirim pesan error internal untuk debug
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
 		Code:    "OK",
-		Message: "User Updated  Successfully",
-		Data:    resp,
+		Message: "Users updated successfully",
 	})
 }

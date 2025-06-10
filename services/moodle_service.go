@@ -6,5 +6,5 @@ type MoodleService interface {
 	CheckStatus() (*web.MoodleStatusResponse, error)
 	CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error)
 	GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error)
-	UpdateUsers(req []web.MoodleUserUpdateRequest) ([]web.MoodleUserUpdateResponse, error)
+	UpdateUsers(req []web.MoodleUserUpdateRequest) error
 }
