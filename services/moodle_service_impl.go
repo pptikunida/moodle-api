@@ -58,6 +58,32 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 }
 
 func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error) {
+	//validation jika sudah ada fieldnya
+	users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+		Field:  "username",
+		Values: []string{req.Username},
+	})
+	if len(users) > 0 {
+		return nil, fmt.Errorf("username '%s' sudah digunakan", req.Username)
+	}
+	if req.Email != "" {
+		users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+			Field:  "email",
+			Values: []string{req.Email},
+		})
+		if len(users) > 0 {
+			return nil, fmt.Errorf("email '%s' sudah digunakan", req.Email)
+		}
+	}
+	if req.IdNumber != "" {
+		users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+			Field:  "idnumber",
+			Values: []string{req.IdNumber},
+		})
+		if len(users) > 0 {
+			return nil, fmt.Errorf("idnumber '%s' sudah digunakan", req.IdNumber)
+		}
+	}
 
 	// Load Env & Moodle Request
 	moodleURL, token, err := helpers.GetMoodleConfig()
@@ -65,8 +91,6 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.Mo
 		return nil, err
 	}
 	form := helpers.NewMoodleForm(token, "core_user_create_users")
-
-	// Set array-style form fields sesuai format Moodle
 	form.Set("users[0][username]", req.Username)
 	form.Set("users[0][auth]", req.Auth)
 	form.Set("users[0][password]", req.Password)
@@ -121,6 +145,14 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.Mo
 	// Check for moodle error
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("Failed to create User: " + string(body))
+	}
+
+	// cek jika ada error dari moodle
+	var maybeError map[string]interface{}
+	if err := json.Unmarshal(body, &maybeError); err != nil {
+		if _, exists := maybeError["exeception"]; exists {
+			return nil, fmt.Errorf("Error from Moodle: %s", string(body))
+		}
 	}
 
 	// Parse Moodle success
