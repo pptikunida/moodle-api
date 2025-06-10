@@ -59,30 +59,39 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 
 func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error) {
 	//validation jika sudah ada fieldnya
-	users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
-		Field:  "username",
-		Values: []string{req.Username},
-	})
-	if len(users) > 0 {
-		return nil, fmt.Errorf("username '%s' sudah digunakan", req.Username)
+	//users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+	//	Field:  "username",
+	//	Values: []string{req.Username},
+	//})
+	//if len(users) > 0 {
+	//	return nil, fmt.Errorf("username '%s' sudah digunakan", req.Username)
+	//}
+	//if req.Email != "" {
+	//	users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+	//		Field:  "email",
+	//		Values: []string{req.Email},
+	//	})
+	//	if len(users) > 0 {
+	//		return nil, fmt.Errorf("email '%s' sudah digunakan", req.Email)
+	//	}
+	//}
+	//if req.IdNumber != "" {
+	//	users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+	//		Field:  "idnumber",
+	//		Values: []string{req.IdNumber},
+	//	})
+	//	if len(users) > 0 {
+	//		return nil, fmt.Errorf("idnumber '%s' sudah digunakan", req.IdNumber)
+	//	}
+	//}
+	if ok, _ := s.checkDuplicateField("username", req.Username); ok {
+		return nil, fmt.Errorf("Username already exists")
 	}
-	if req.Email != "" {
-		users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
-			Field:  "email",
-			Values: []string{req.Email},
-		})
-		if len(users) > 0 {
-			return nil, fmt.Errorf("email '%s' sudah digunakan", req.Email)
-		}
+	if ok, _ := s.checkDuplicateField("email", req.Email); ok {
+		return nil, fmt.Errorf("Email already exists")
 	}
-	if req.IdNumber != "" {
-		users, _ := s.GetUserByField(web.MoodleUserGetByFieldRequest{
-			Field:  "idnumber",
-			Values: []string{req.IdNumber},
-		})
-		if len(users) > 0 {
-			return nil, fmt.Errorf("idnumber '%s' sudah digunakan", req.IdNumber)
-		}
+	if ok, _ := s.checkDuplicateField("idnumber", req.IdNumber); ok {
+		return nil, fmt.Errorf("Idnumber already exists")
 	}
 
 	// Load Env & Moodle Request
@@ -331,4 +340,16 @@ func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) ([]we
 		return nil, fmt.Errorf("failed to unmarshal Moodle user response: %w", err)
 	}
 	return []web.MoodleUserUpdateResponse{result}, nil
+}
+
+// helper untuk duplikat
+func (s *MoodleServiceImpl) checkDuplicateField(field string, value string) (bool, error) {
+	users, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+		Field:  field,
+		Values: []string{value},
+	})
+	if err != nil {
+		return false, err
+	}
+	return len(users) > 0, nil
 }
