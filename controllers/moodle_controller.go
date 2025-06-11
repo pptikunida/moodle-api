@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/model/web"
@@ -77,9 +78,9 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	// Bind JSON request body ke struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_PARAMS",
-			Message: err.Error(),
-			Data:    nil,
+			Code:    "INVALID_REQUEST_BODY",
+			Message: "Format body request tidak valid.",
+			Data:    err.Error(),
 		})
 		return
 	}
@@ -87,10 +88,27 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	// service
 	users, err := s.moodleService.GetUserByField(req)
 	if err != nil {
+		log.Printf("[DIAGNOSA] Controller menerima error. Tipe: %T, Isi: %v", err, err)
+		// Logika ini sekarang akan bekerja dengan benar!
+		if errors.Is(err, services.ErrNotFound) {
+			c.JSON(http.StatusNotFound, web.ApiResponse{
+				Code:    "DATA_NOT_FOUND",
+				Message: err.Error(), // Menggunakan pesan dari variabel ErrNotFound
+			})
+			return
+		}
+
+		if moodleErr, ok := err.(*web.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
-			Message: err.Error(),
-			Data:    nil,
+			Message: "Terjadi kesalahan pada server.",
 		})
 		return
 	}
