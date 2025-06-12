@@ -66,8 +66,18 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 	if err != nil {
 		return nil, err
 	}
-	form := helpers.NewMoodleForm(token, "core_user_create_users")
 
+	// VALIDASI
+	err = CheckMoodleDuplicateFields(s, map[string]string{
+		"username": req.Username,
+		"email":    req.Email,
+		"idnumber": req.IdNumber,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	form := helpers.NewMoodleForm(token, "core_user_create_users")
 	// Mengisi form dengan semua data dari request
 	form.Set("users[0][username]", req.Username)
 	form.Set("users[0][password]", req.Password)
@@ -104,7 +114,6 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 	}
 	log.Printf("[CreateUser] Raw Response: %s", string(body))
 
-	// INI ADALAH LOGIKA PENANGANAN ERROR YANG SUDAH DIPERBAIKI
 	var moodleErr web.MoodleException
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
 		return nil, &moodleErr
@@ -309,14 +318,32 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	return nil
 }
 
-// helper untuk duplikat
-func (s *MoodleServiceImpl) checkDuplicateField(field string, value string) (bool, error) {
-	users, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+// function cek validasi jika ada duplikat
+func CheckMoodleDuplicateField(svc MoodleService, field, value string) error {
+	users, err := svc.GetUserByField(web.MoodleUserGetByFieldRequest{
 		Field:  field,
 		Values: []string{value},
 	})
+	// Tangani kasus tidak ditemukan → ini bukan error untuk duplikasi
 	if err != nil {
-		return false, err
+		if errors.Is(err, ErrNotFound) {
+			return nil // Tidak ditemukan berarti tidak duplikat
+		}
+		// Error selain ErrNotFound dianggap error asli
+		return fmt.Errorf("gagal memeriksa field '%s' di Moodle: %w", field, err)
 	}
-	return len(users) > 0, nil
+	if len(users) > 0 {
+		return fmt.Errorf("field '%s' dengan nilai '%s' sudah digunakan di Moodle", field, value)
+	}
+	return nil
+}
+
+// function cek validasi jika ada duplikat banyak
+func CheckMoodleDuplicateFields(svc MoodleService, fields map[string]string) error {
+	for field, value := range fields {
+		if err := CheckMoodleDuplicateField(svc, field, value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
