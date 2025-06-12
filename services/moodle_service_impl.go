@@ -59,101 +59,63 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	return &status, nil
 }
 
-func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error) {
-	//validation jika sudah ada fieldnya
-	if ok, _ := s.checkDuplicateField("username", req.Username); ok {
-		return nil, fmt.Errorf("Username already exists")
-	}
-	if ok, _ := s.checkDuplicateField("email", req.Email); ok {
-		return nil, fmt.Errorf("Email already exists")
-	}
-	if ok, _ := s.checkDuplicateField("idnumber", req.IdNumber); ok {
-		return nil, fmt.Errorf("Idnumber already exists")
-	}
+// file: services/moodle_service_impl.go
 
-	// Load Env & Moodle Request
+func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
 		return nil, err
 	}
 	form := helpers.NewMoodleForm(token, "core_user_create_users")
+
+	// Mengisi form dengan semua data dari request
 	form.Set("users[0][username]", req.Username)
-	form.Set("users[0][auth]", req.Auth)
 	form.Set("users[0][password]", req.Password)
 	form.Set("users[0][firstname]", req.Firstname)
 	form.Set("users[0][lastname]", req.Lastname)
 	form.Set("users[0][email]", req.Email)
-	if req.City != "" {
-		form.Set("users[0][city]", req.City)
-	}
-	if req.Country != "" {
-		form.Set("users[0][country]", req.Country)
-	}
-	if req.Timezone != "" {
-		form.Set("users[0][timezone]", req.Timezone)
-	}
-	if req.Description != "" {
-		form.Set("users[0][description]", req.Description)
-	}
-	if req.IdNumber != "" {
-		form.Set("users[0][idnumber]", req.IdNumber)
-	}
-	if req.Lang != "" {
-		form.Set("users[0][lang]", req.Lang)
-	}
-	if req.CalendarType != "" {
-		form.Set("users[0][calendartype]", req.CalendarType)
-	}
-	for i, field := range req.CustomFields {
-		form.Set(fmt.Sprintf("users[0][customfields][%d][type]", i), field.Type)
-		form.Set(fmt.Sprintf("users[0][customfields][%d][value]", i), field.Value)
+	form.Set("users[0][idnumber]", req.IdNumber)
+	form.Set("users[0][auth]", req.Auth)
+	form.Set("users[0][city]", req.City)
+	form.Set("users[0][country]", req.Country)
+	form.Set("users[0][timezone]", req.Timezone)
+	form.Set("users[0][description]", req.Description)
+	form.Set("users[0][lang]", req.Lang)
+	form.Set("users[0][calendartype]", req.CalendarType)
+
+	for i, cf := range req.CustomFields {
+		form.Set(fmt.Sprintf("users[0][customfields][%d][type]", i), cf.Type)
+		form.Set(fmt.Sprintf("users[0][customfields][%d][value]", i), cf.Value)
 	}
 	for i, pref := range req.Preferences {
 		form.Set(fmt.Sprintf("users[0][preferences][%d][type]", i), pref.Type)
 		form.Set(fmt.Sprintf("users[0][preferences][%d][value]", i), pref.Value)
 	}
 
-	// POST req to moodle
 	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("gagal memanggil Moodle untuk CreateUser: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// read body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("gagal membaca body respons CreateUser: %w", err)
+	}
+	log.Printf("[CreateUser] Raw Response: %s", string(body))
+
+	// INI ADALAH LOGIKA PENANGANAN ERROR YANG SUDAH DIPERBAIKI
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		return nil, &moodleErr
 	}
 
-	log.Println("[CreateUser] Raw Response:", string(body)) // log
-
-	// Check for moodle error
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Failed to create User: " + string(body))
-	}
-
-	// cek jika ada error dari moodle
-	var maybeError map[string]interface{}
-	if err := json.Unmarshal(body, &maybeError); err != nil {
-		if _, exists := maybeError["exeception"]; exists {
-			return nil, fmt.Errorf("Error from Moodle: %s", string(body))
-		}
-	}
-
-	// Parse Moodle success
 	var result []web.MoodleUserCreateResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateUser: %w", err)
 	}
 
-	if len(result) == 0 || result[0].ID == 0 {
-		log.Println("[CreateUser] Warning: Moodle returned empty or invalid user")
-		return nil, errors.New("No user returned or user invalid")
-	}
-
-	return &result[0], nil
+	return result, nil
 }
 
 func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error) {
@@ -293,24 +255,31 @@ func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) error
 }
 
 func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
-	// cek user di moodle berdasarkan idnumber / NIM
+	// Validasi awal
+	if req.Username == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" || req.Email == "" || req.NIM == "" {
+		log.Println("[ERROR] UserSync: Permintaan tidak valid, ada field yang kosong")
+		return fmt.Errorf("semua field wajib diisi: username, password, firstname, lastname, email, nim")
+	}
+
+	// Log permintaan awal
+	log.Printf("[INFO] UserSync: Sinkronisasi pengguna dengan NIM '%s' dan username '%s'", req.NIM, req.Username)
+
+	// Cek user di Moodle berdasarkan idnumber (NIM)
 	_, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
 		Field:  "idnumber",
 		Values: []string{req.NIM},
 	})
 
-	// cek hasil
+	// Jika user sudah ada di Moodle
 	if err == nil {
-		log.Printf("[INFO] UserSync: Pengguna '%s' sudah ada di moodle, tidak ada aksi yang dipanggil", req.NIM)
+		log.Printf("[INFO] UserSync: Pengguna '%s' (NIM: %s) sudah ada di Moodle, tidak ada tindakan", req.Username, req.NIM)
 		return nil
 	}
 
-	// Periksa apakah errornya adalah 'ErrNotFound' yang spesifik.
+	// Jika error-nya adalah 'tidak ditemukan', maka buat user baru
 	if errors.Is(err, ErrNotFound) {
-		// jika pengguna tidak ditemukan
-		log.Printf("[INFO] UserSync: Pengguna '%s' tidak ditemukan di Moodle. Memulai proses pembuatan...", req.Username)
+		log.Printf("[INFO] UserSync: Pengguna '%s' (NIM: %s) tidak ditemukan di Moodle. Memulai proses pembuatan...", req.Username, req.NIM)
 
-		// menyiapkan request untuk create user
 		createUserReq := web.MoodleUserCreateRequest{
 			Username:  req.Username,
 			Password:  req.Password,
@@ -319,17 +288,27 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 			Email:     req.Email,
 			IdNumber:  req.NIM,
 			Auth:      "manual",
+			// Optional: bisa diisi default kalau tidak dikirim
+			City:         "Indonesia",
+			Country:      "ID",
+			Timezone:     "Asia/Jakarta",
+			Lang:         "en",
+			CalendarType: "gregorian",
 		}
 
-		// createuser
 		_, createErr := s.CreateUser(createUserReq)
 		if createErr != nil {
 			log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
-			return createErr
+			return fmt.Errorf("gagal membuat user di moodle: %w", createErr)
 		}
+
+		log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
+		return nil
 	}
-	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
-	return nil
+
+	// Error lain (bukan ErrNotFound)
+	log.Printf("[ERROR] UserSync: Terjadi error saat mencari pengguna '%s'. Error: %v", req.Username, err)
+	return fmt.Errorf("gagal sinkronisasi pengguna: %w", err)
 }
 
 // helper untuk duplikat
