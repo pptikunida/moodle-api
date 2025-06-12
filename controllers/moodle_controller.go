@@ -89,7 +89,6 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	users, err := s.moodleService.GetUserByField(req)
 	if err != nil {
 		log.Printf("[DIAGNOSA] Controller menerima error. Tipe: %T, Isi: %v", err, err)
-		// Logika ini sekarang akan bekerja dengan benar!
 		if errors.Is(err, services.ErrNotFound) {
 			c.JSON(http.StatusNotFound, web.ApiResponse{
 				Code:    "DATA_NOT_FOUND",
