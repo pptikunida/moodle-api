@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/model/web"
 	"github.com/rizkycahyono97/moodle-api/services"
+	"github.com/rizkycahyono97/moodle-api/utils/validation"
 	"log"
 	"net/http"
 )
@@ -89,7 +90,7 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	users, err := s.moodleService.GetUserByField(req)
 	if err != nil {
 		log.Printf("[DIAGNOSA] Controller menerima error. Tipe: %T, Isi: %v", err, err)
-		if errors.Is(err, services.ErrNotFound) {
+		if errors.Is(err, validation.ErrNotFound) {
 			c.JSON(http.StatusNotFound, web.ApiResponse{
 				Code:    "DATA_NOT_FOUND",
 				Message: err.Error(), // Menggunakan pesan dari variabel ErrNotFound

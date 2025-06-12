@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/rizkycahyono97/moodle-api/model/web"
 	"github.com/rizkycahyono97/moodle-api/utils/helpers"
+	"github.com/rizkycahyono97/moodle-api/utils/validation"
 	"io"
 	"log"
 	"net/http"
@@ -20,8 +21,6 @@ func NewMoodleService(client *http.Client) MoodleService {
 		client: client,
 	}
 }
-
-var ErrNotFound = errors.New("data dengan kriteria yang diberikan tidak ditemukan")
 
 func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	// Load Env & Moodle Request
@@ -59,8 +58,6 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	return &status, nil
 }
 
-// file: services/moodle_service_impl.go
-
 func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
@@ -68,7 +65,7 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 	}
 
 	// VALIDASI
-	err = CheckMoodleDuplicateFields(s, map[string]string{
+	err = validation.CheckMoodleDuplicateFields(s, map[string]string{
 		"username": req.Username,
 		"email":    req.Email,
 		"idnumber": req.IdNumber,
@@ -180,11 +177,11 @@ func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) 
 	// Jika tidak ada error, unmarshal ke slice of users
 	var result []web.MoodleUserGetByFieldResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, ErrNotFound
+		return nil, validation.ErrNotFound
 	}
 
 	if len(result) == 0 {
-		return nil, ErrNotFound
+		return nil, validation.ErrNotFound
 	}
 
 	return result, nil
@@ -273,23 +270,14 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	// Log permintaan awal
 	log.Printf("[INFO] UserSync: Sinkronisasi pengguna dengan NIM '%s' dan username '%s'", req.NIM, req.Username)
 
-	// Cek user di Moodle berdasarkan idnumber (NIM)
-	existingByNIM, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
-		Field:  "idnumber",
-		Values: []string{req.NIM},
+	// validasi jika duplikat
+	err := validation.CheckMoodleDuplicateFields(s, map[string]string{
+		"idnumber": req.NIM,
+		"email":    req.Email,
 	})
-	if err == nil && len(existingByNIM) > 0 {
-		log.Printf("[INFO] UserSync: Field 'idnumber' dengan nilai '%s' sudah digunakan di Moodle. Sinkronisasi dilewati.", req.NIM)
-		return fmt.Errorf("idnumber (NIM) '%s' sudah digunakan di Moodle", req.NIM)
-	}
-
-	existingByEmail, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
-		Field:  "email",
-		Values: []string{req.Email},
-	})
-	if err == nil && len(existingByEmail) > 0 {
-		log.Printf("[INFO] UserSync: Field 'email' dengan nilai '%s' sudah digunakan di Moodle. Sinkronisasi dilewati.", req.Email)
-		return fmt.Errorf("email '%s' sudah digunakan di Moodle", req.Email)
+	if err != nil {
+		log.Printf("[INFO] UserSync: Duplikasi ditemukan. Error: %v", err)
+		return err
 	}
 
 	createUserReq := web.MoodleUserCreateRequest{
@@ -315,35 +303,5 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	}
 
 	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
-	return nil
-}
-
-// function cek validasi jika ada duplikat
-func CheckMoodleDuplicateField(svc MoodleService, field, value string) error {
-	users, err := svc.GetUserByField(web.MoodleUserGetByFieldRequest{
-		Field:  field,
-		Values: []string{value},
-	})
-	// Tangani kasus tidak ditemukan → ini bukan error untuk duplikasi
-	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return nil // Tidak ditemukan berarti tidak duplikat
-		}
-		// Error selain ErrNotFound dianggap error asli
-		return fmt.Errorf("gagal memeriksa field '%s' di Moodle: %w", field, err)
-	}
-	if len(users) > 0 {
-		return fmt.Errorf("field '%s' dengan nilai '%s' sudah digunakan di Moodle", field, value)
-	}
-	return nil
-}
-
-// function cek validasi jika ada duplikat banyak
-func CheckMoodleDuplicateFields(svc MoodleService, fields map[string]string) error {
-	for field, value := range fields {
-		if err := CheckMoodleDuplicateField(svc, field, value); err != nil {
-			return err
-		}
-	}
 	return nil
 }
