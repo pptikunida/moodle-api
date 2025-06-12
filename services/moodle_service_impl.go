@@ -292,6 +292,46 @@ func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) error
 	return nil
 }
 
+func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
+	// cek user di moodle berdasarkan idnumber / NIM
+	_, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+		Field:  "idnumber",
+		Values: []string{req.NIM},
+	})
+
+	// cek hasil
+	if err == nil {
+		log.Printf("[INFO] UserSync: Pengguna '%s' sudah ada di moodle, tidak ada aksi yang dipanggil", req.NIM)
+		return nil
+	}
+
+	// Periksa apakah errornya adalah 'ErrNotFound' yang spesifik.
+	if errors.Is(err, ErrNotFound) {
+		// jika pengguna tidak ditemukan
+		log.Printf("[INFO] UserSync: Pengguna '%s' tidak ditemukan di Moodle. Memulai proses pembuatan...", req.Username)
+
+		// menyiapkan request untuk create user
+		createUserReq := web.MoodleUserCreateRequest{
+			Username:  req.Username,
+			Password:  req.Password,
+			Firstname: req.FirstName,
+			Lastname:  req.LastName,
+			Email:     req.Email,
+			IdNumber:  req.NIM,
+			Auth:      "manual",
+		}
+
+		// createuser
+		_, createErr := s.CreateUser(createUserReq)
+		if createErr != nil {
+			log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
+			return createErr
+		}
+	}
+	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
+	return nil
+}
+
 // helper untuk duplikat
 func (s *MoodleServiceImpl) checkDuplicateField(field string, value string) (bool, error) {
 	users, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{

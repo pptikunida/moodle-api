@@ -7,4 +7,5 @@ type MoodleService interface {
 	CreateUser(req web.MoodleUserCreateRequest) (*web.MoodleUserCreateResponse, error)
 	GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error)
 	UpdateUsers(req []web.MoodleUserUpdateRequest) error
+	UserSync(req web.MoodleUserSyncRequest) error
 }
