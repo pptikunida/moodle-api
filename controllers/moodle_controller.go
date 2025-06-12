@@ -158,39 +158,30 @@ func (s *MoodleController) UpdateUser(c *gin.Context) {
 func (s *MoodleController) UserSync(c *gin.Context) {
 	var req web.MoodleUserSyncRequest
 
-	// Bind dan validasi dari Sikad
+	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
 			Code:    "INVALID_REQUEST",
-			Message: "Format request body tidak valid atau ada field yang kurang.",
-			Data:    err.Error(),
+			Message: "Data yang dikirim tidak valid: " + err.Error(),
 		})
 		return
 	}
 
-	//service
+	// Panggil service
 	err := s.moodleService.UserSync(req)
-
-	// handle response dari service
 	if err != nil {
-		if moodleErr, ok := err.(*web.MoodleException); ok {
-			c.JSON(http.StatusBadRequest, web.ApiResponse{
-				Code:    moodleErr.ErrorCode,
-				Message: moodleErr.Message,
-			})
-			return
-		}
-
-		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
-			Message: "An internal error occurred",
-			Data:    err.Error(),
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "USER_SYNC_FAILED",
+			Message: err.Error(),
+			Data:    nil,
 		})
 		return
 	}
 
+	// Berhasil
 	c.JSON(http.StatusOK, web.ApiResponse{
 		Code:    "OK",
-		Message: "Users synced successfully",
+		Message: "User synced successfully",
+		Data:    nil,
 	})
 }

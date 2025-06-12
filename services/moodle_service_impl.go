@@ -265,50 +265,48 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	log.Printf("[INFO] UserSync: Sinkronisasi pengguna dengan NIM '%s' dan username '%s'", req.NIM, req.Username)
 
 	// Cek user di Moodle berdasarkan idnumber (NIM)
-	_, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+	existingByNIM, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
 		Field:  "idnumber",
 		Values: []string{req.NIM},
 	})
-
-	// Jika user sudah ada di Moodle
-	if err == nil {
-		log.Printf("[INFO] UserSync: Pengguna '%s' (NIM: %s) sudah ada di Moodle, tidak ada tindakan", req.Username, req.NIM)
-		return nil
+	if err == nil && len(existingByNIM) > 0 {
+		log.Printf("[INFO] UserSync: Field 'idnumber' dengan nilai '%s' sudah digunakan di Moodle. Sinkronisasi dilewati.", req.NIM)
+		return fmt.Errorf("idnumber (NIM) '%s' sudah digunakan di Moodle", req.NIM)
 	}
 
-	// Jika error-nya adalah 'tidak ditemukan', maka buat user baru
-	if errors.Is(err, ErrNotFound) {
-		log.Printf("[INFO] UserSync: Pengguna '%s' (NIM: %s) tidak ditemukan di Moodle. Memulai proses pembuatan...", req.Username, req.NIM)
-
-		createUserReq := web.MoodleUserCreateRequest{
-			Username:  req.Username,
-			Password:  req.Password,
-			Firstname: req.FirstName,
-			Lastname:  req.LastName,
-			Email:     req.Email,
-			IdNumber:  req.NIM,
-			Auth:      "manual",
-			// Optional: bisa diisi default kalau tidak dikirim
-			City:         "Indonesia",
-			Country:      "ID",
-			Timezone:     "Asia/Jakarta",
-			Lang:         "en",
-			CalendarType: "gregorian",
-		}
-
-		_, createErr := s.CreateUser(createUserReq)
-		if createErr != nil {
-			log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
-			return fmt.Errorf("gagal membuat user di moodle: %w", createErr)
-		}
-
-		log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
-		return nil
+	existingByEmail, err := s.GetUserByField(web.MoodleUserGetByFieldRequest{
+		Field:  "email",
+		Values: []string{req.Email},
+	})
+	if err == nil && len(existingByEmail) > 0 {
+		log.Printf("[INFO] UserSync: Field 'email' dengan nilai '%s' sudah digunakan di Moodle. Sinkronisasi dilewati.", req.Email)
+		return fmt.Errorf("email '%s' sudah digunakan di Moodle", req.Email)
 	}
 
-	// Error lain (bukan ErrNotFound)
-	log.Printf("[ERROR] UserSync: Terjadi error saat mencari pengguna '%s'. Error: %v", req.Username, err)
-	return fmt.Errorf("gagal sinkronisasi pengguna: %w", err)
+	createUserReq := web.MoodleUserCreateRequest{
+		Username:  req.Username,
+		Password:  req.Password,
+		Firstname: req.FirstName,
+		Lastname:  req.LastName,
+		Email:     req.Email,
+		IdNumber:  req.NIM,
+		Auth:      "manual",
+		// Optional: bisa diisi default kalau tidak dikirim
+		City:         "Indonesia",
+		Country:      "ID",
+		Timezone:     "Asia/Jakarta",
+		Lang:         "en",
+		CalendarType: "gregorian",
+	}
+
+	_, createErr := s.CreateUser(createUserReq)
+	if createErr != nil {
+		log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
+		return fmt.Errorf("gagal membuat user di moodle: %w", createErr)
+	}
+
+	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
+	return nil
 }
 
 // helper untuk duplikat
