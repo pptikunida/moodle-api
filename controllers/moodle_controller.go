@@ -198,6 +198,8 @@ func (s *MoodleController) AssignRole(c *gin.Context) {
 		return
 	}
 
+	log.Printf("[DEBUG] AssignRole Controller: Menerima request %+v", req)
+
 	// panggil service
 	if err := s.moodleService.AssignRole(req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{

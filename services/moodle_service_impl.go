@@ -315,8 +315,9 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 
 	form := helpers.NewMoodleForm(token, "core_role_assign_roles")
 
+	// loop melalui assignments
 	for i, a := range req.Assignments {
-		form.Set(fmt.Sprintf("assignment[%d][roleid]", i), strconv.Itoa(a.RoleID))
+		form.Set(fmt.Sprintf("assignments[%d][roleid]", i), strconv.Itoa(a.RoleID))
 		form.Set(fmt.Sprintf("assignments[%d][userid]", i), strconv.Itoa(a.UserID))
 		if a.ContextID != 0 {
 			form.Set(fmt.Sprintf("assignments[%d][contextid]", i), strconv.Itoa(a.ContextID))
@@ -328,6 +329,8 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 			form.Set(fmt.Sprintf("assignments[%d][instanceid]", i), strconv.Itoa(a.InstanceID))
 		}
 	}
+
+	log.Printf("[DEBUG] AssignRole Service: Form data yang akan dikirim:\n%s", form.Encode())
 
 	// kirim req POST ke moodle
 	resp, err := s.client.PostForm(moodleUrl, form)
@@ -341,9 +344,11 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 		return fmt.Errorf("error reading response body: %w", err)
 	}
 
+	log.Printf("[DEBUG] AssignRole Service: Raw response dari Moodle: %s", string(body))
+
 	// cek response
 	var moodleErr web.MoodleException
-	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Message != "" {
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
 		return &moodleErr
 	}
 
