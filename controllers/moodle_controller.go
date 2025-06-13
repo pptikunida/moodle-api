@@ -186,3 +186,29 @@ func (s *MoodleController) UserSync(c *gin.Context) {
 		Data:    nil,
 	})
 }
+
+func (s *MoodleController) AssignRole(c *gin.Context) {
+	var req web.MoodleRoleAssignRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "INVALID_REQUEST",
+			Message: "Data yang dikirim tidak valid: " + err.Error(),
+		})
+		return
+	}
+
+	// panggil service
+	if err := s.moodleService.AssignRole(req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "USER_ASSIGN_FAILED",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, web.ApiResponse{
+		Code:    "OK",
+		Message: "User assigned successfully",
+	})
+}
