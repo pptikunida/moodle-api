@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type MoodleServiceImpl struct {
@@ -304,4 +305,48 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 
 	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
 	return nil
+}
+
+func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
+	moodleUrl, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil
+	}
+
+	form := helpers.NewMoodleForm(token, "core_role_assign_roles")
+
+	for i, a := range req.Assignments {
+		form.Set(fmt.Sprintf("assignment[%d][roleid]", i), strconv.Itoa(a.RoleID))
+		form.Set(fmt.Sprintf("assignments[%d][userid]", i), strconv.Itoa(a.UserID))
+		if a.ContextID != 0 {
+			form.Set(fmt.Sprintf("assignments[%d][contextid]", i), strconv.Itoa(a.ContextID))
+		}
+		if a.ContextLevel != "" {
+			form.Set(fmt.Sprintf("assignments[%d][contextlevel]", i), a.ContextLevel)
+		}
+		if a.InstanceID != 0 {
+			form.Set(fmt.Sprintf("assignments[%d][instanceid]", i), strconv.Itoa(a.InstanceID))
+		}
+	}
+
+	// kirim req POST ke moodle
+	resp, err := s.client.PostForm(moodleUrl, form)
+	if err != nil {
+		return fmt.Errorf("error send request to Moodle: %w", err)
+	}
+
+	// baca body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %w", err)
+	}
+
+	// cek response
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Message != "" {
+		return &moodleErr
+	}
+
+	return nil
+
 }
