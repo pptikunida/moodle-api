@@ -7,6 +7,7 @@ type MoodleUserSyncRequest struct {
 	LastName  string `json:"last_name" validate:"required"`
 	Email     string `json:"email" validate:"required,email"`
 	NIM       string `json:"NIM" validate:"required"`
+	RoleID    int    `json:"roleid"`
 
 	// tambahan
 	Auth         string `json:"auth,omitempty"`
