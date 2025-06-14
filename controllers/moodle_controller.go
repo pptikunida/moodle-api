@@ -227,9 +227,17 @@ func (s *MoodleController) CreateCourse(c *gin.Context) {
 
 	courses, err := s.moodleService.CreateCourse(req)
 	if err != nil {
+		if moodleErr, ok := err.(*web.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
-			Message: err.Error(),
+			Message: "An internal error occurred",
 		})
 		return
 	}

@@ -393,10 +393,10 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 		prefix := fmt.Sprintf("courses[%d]", i)
 		form.Set(prefix+"[fullname]", course.FullName)
 		form.Set(prefix+"[shortname]", course.ShortName)
-		form.Set(prefix+"[categoryId]", fmt.Sprintf("%d", course.CategoryID))
+		form.Set(prefix+"[categoryid]", fmt.Sprintf("%d", course.CategoryID))
 
 		if course.IDNumber != "" {
-			form.Set(fmt.Sprintf("courses[%d][idNumber]", i), course.IDNumber)
+			form.Set(fmt.Sprintf("courses[%d][idnumber]", i), course.IDNumber)
 		}
 		if course.Summary != "" {
 			form.Set(prefix+"[summary]", course.Summary)
@@ -415,25 +415,37 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 		}
 		//custom field
 		for j, field := range course.CustomFields {
-			fieldPrefix := fmt.Sprintf("custom_fields[%d]", j)
+			fieldPrefix := fmt.Sprintf("customfields[%d]", j)
 			form.Set(fieldPrefix+"[shortname]", field.ShortName)
 			form.Set(fieldPrefix+"[value]", field.Value)
 		}
 	}
 
 	// kirim post ke moodle
-	resp, err := http.PostForm(moodleURL, form)
+	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
 		log.Printf("[ERROR] CreateCourse: gagal melakukan request ke Moodle: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	// cek response
-	var moodleResp []web.MoodleCreateCourseResponse
-	if err := json.NewDecoder(resp.Body).Decode(&moodleResp); err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal decode response: %v", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal membaca body: %v", err)
 		return nil, err
+	}
+	log.Printf("[DEBUG] CreateCourse Raw Response: %s", string(body))
+
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		return nil, &moodleErr
+	}
+
+	// jika tidak error
+	var moodleResp []web.MoodleCreateCourseResponse
+	if err := json.Unmarshal(body, &moodleResp); err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal decode response sukses: %v", err)
+		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateCourse: %w", err)
 	}
 
 	return moodleResp, nil
