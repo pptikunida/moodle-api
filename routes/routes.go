@@ -18,5 +18,6 @@ func SetupRouter(
 		api.POST("/users/update", moodleController.UpdateUser)
 		api.POST("/users/sync", moodleController.UserSync)
 		api.POST("/users/assign-role", moodleController.AssignRole)
+		api.POST("/moodle/create-course", moodleController.CreateCourse)
 	}
 }
