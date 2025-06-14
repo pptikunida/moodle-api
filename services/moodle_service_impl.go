@@ -297,10 +297,31 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		CalendarType: "gregorian",
 	}
 
-	_, createErr := s.CreateUser(createUserReq)
+	createdUsers, createErr := s.CreateUser(createUserReq)
 	if createErr != nil {
 		log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
 		return fmt.Errorf("gagal membuat user di moodle: %w", createErr)
+	}
+
+	// ambil user id yang baru dibuat
+	newUserID := createdUsers[0].ID
+
+	// assign Role
+	assignReq := web.MoodleRoleAssignRequest{
+		Assignments: []web.MoodleRoleAssigment{
+			{
+				RoleID: req.RoleID,
+				UserID: newUserID,
+				//ContextLevel: "system",
+				ContextID: 1,
+			},
+		},
+	}
+
+	if err := s.AssignRole(assignReq); err != nil {
+		log.Printf("[WARN] UserSync: Gagal assign role ke user '%s'. Error: %v", req.Username, err)
+	} else {
+		log.Printf("[INFO] UserSync: Berhasil assign role ID %d ke user '%s'", req.RoleID, req.Username)
 	}
 
 	log.Printf("[INFO] UserSync: Pengguna '%s' berhasil dibuat di Moodle.", req.Username)
