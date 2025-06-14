@@ -214,3 +214,29 @@ func (s *MoodleController) AssignRole(c *gin.Context) {
 		Message: "User assigned successfully",
 	})
 }
+
+func (s *MoodleController) CreateCourse(c *gin.Context) {
+	var req web.MoodleCreateCourseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "INVALID_REQUEST",
+			Message: "Data yang dikirim tidak valid: " + err.Error(),
+		})
+		return
+	}
+
+	courses, err := s.moodleService.CreateCourse(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, web.ApiResponse{
+			Code:    "INTERNAL_SERVER_ERROR",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, web.ApiResponse{
+		Code:    "OK",
+		Message: "Courses created successfully",
+		Data:    courses,
+	})
+}
