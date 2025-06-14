@@ -376,3 +376,65 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 	return nil
 
 }
+
+func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]web.MoodleCreateCourseResponse, error) {
+	// load moodle conf
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal mendapatkan konfigurasi Moodle: %v", err)
+		return nil, err
+	}
+
+	// req ke moodle
+	form := helpers.NewMoodleForm(token, "core_course_create_courses")
+
+	// Encode ke format moodle
+	for i, course := range req.Courses {
+		prefix := fmt.Sprintf("courses[%d]", i)
+		form.Set(prefix+"[fullname]", course.FullName)
+		form.Set(prefix+"[shortname]", course.ShortName)
+		form.Set(prefix+"[categoryId]", fmt.Sprintf("%d", course.CategoryID))
+
+		if course.IDNumber != "" {
+			form.Set(fmt.Sprintf("courses[%d][idNumber]", i), course.IDNumber)
+		}
+		if course.Summary != "" {
+			form.Set(prefix+"[summary]", course.Summary)
+		}
+		if course.SummaryFormat != 0 {
+			form.Set(prefix+"[summaryformat]", fmt.Sprintf("%d", course.SummaryFormat))
+		}
+		if course.Format != "" {
+			form.Set(prefix+"[format]", course.Format)
+		}
+		if course.Lang != "" {
+			form.Set(prefix+"[lang]", course.Lang)
+		}
+		if course.Visible != 0 {
+			form.Set(prefix+"[visible]", fmt.Sprintf("%d", course.Visible))
+		}
+		//custom field
+		for j, field := range course.CustomFields {
+			fieldPrefix := fmt.Sprintf("custom_fields[%d]", j)
+			form.Set(fieldPrefix+"[shortname]", field.ShortName)
+			form.Set(fieldPrefix+"[value]", field.Value)
+		}
+	}
+
+	// kirim post ke moodle
+	resp, err := http.PostForm(moodleURL, form)
+	if err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal melakukan request ke Moodle: %v", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// cek response
+	var moodleResp []web.MoodleCreateCourseResponse
+	if err := json.NewDecoder(resp.Body).Decode(&moodleResp); err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal decode response: %v", err)
+		return nil, err
+	}
+
+	return moodleResp, nil
+}

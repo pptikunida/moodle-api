@@ -13,4 +13,5 @@ type MoodleService interface {
 	UpdateUsers(req []web.MoodleUserUpdateRequest) error
 	UserSync(req web.MoodleUserSyncRequest) error
 	AssignRole(req web.MoodleRoleAssignRequest) error
+	CreateCourse(req web.MoodleCreateCourseRequest) ([]web.MoodleCreateCourseResponse, error)
 }

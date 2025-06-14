@@ -1,7 +1,7 @@
 package web
 
 type MoodleCreateCourseRequest struct {
-	Course []MoodleCourseData `json:"courses" binding:"required"`
+	Courses []MoodleCourseData `json:"courses" binding:"required"`
 }
 
 type MoodleCourseData struct {
