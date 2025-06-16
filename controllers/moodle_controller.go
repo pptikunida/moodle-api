@@ -276,3 +276,41 @@ func (s *MoodleController) EnrollManualEnrolUsers(c *gin.Context) {
 		Data:    nil,
 	})
 }
+
+func (s *MoodleController) CreateCourseWithEnrolment(c *gin.Context) {
+	var req web.MoodleCreateCourseWithEnrollUserRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "400",
+			Message: "Data yang dikirim tidak valid: ",
+			Data:    err.Error(),
+		})
+		return
+	}
+
+	newCourseInfo, err := s.moodleService.CreateCourseWithEnrollUser(req)
+	if err != nil {
+		if moodleErr, ok := err.(*web.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, web.ApiResponse{
+			Code:    "500",
+			Message: "Terjadi kesalahan internal pada server.",
+			Data:    err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, web.ApiResponse{
+		Code:    "201",
+		Message: "Kursus berhasil di buat dan penggunal telah didaftarkan.",
+		Data:    newCourseInfo,
+	})
+
+}
