@@ -261,6 +261,7 @@ func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) error
 	return nil
 }
 
+// function userSync untuk login siakad, jika tidak ada buatkan user di moodlenya
 func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	// Validasi awal
 	if req.Username == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" || req.Email == "" || req.NIM == "" {
@@ -448,6 +449,8 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateCourse: %w", err)
 	}
 
+	// Enroll users
+
 	return moodleResp, nil
 }
 
@@ -496,6 +499,8 @@ func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollReq
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
 		return &moodleErr
 	}
-	
+
 	return nil
 }
+
+// function untuk createCourse dan Enroll
