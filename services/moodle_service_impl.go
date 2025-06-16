@@ -450,3 +450,52 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 
 	return moodleResp, nil
 }
+
+func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollRequest) error {
+	// load config moodle
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return fmt.Errorf("gagal mendapatkan konfigurasi Moodle: %w", err)
+	}
+
+	// siapkan form
+	form := helpers.NewMoodleForm(token, "enrol_manual_enrol_users")
+	for i, enrol := range req.Enrolments {
+		form.Set(fmt.Sprintf("enrolments[%d][roleid]", i), strconv.Itoa(enrol.RoleID))
+		form.Set(fmt.Sprintf("enrolments[%d][userid]", i), strconv.Itoa(enrol.UserID))
+		form.Set(fmt.Sprintf("enrolments[%d][courseid]", i), strconv.Itoa(enrol.CourseID))
+
+		// Jika timestart, timeend, suspend ada, baru set
+		if enrol.TimeStart != 0 {
+			form.Set(fmt.Sprintf("enrolments[%d][timestart]", i), strconv.Itoa(enrol.TimeStart))
+		}
+		if enrol.TimeEnd != 0 {
+			form.Set(fmt.Sprintf("enrolments[%d][timeend]", i), strconv.Itoa(enrol.TimeEnd))
+		}
+		if enrol.Suspend != 0 {
+			form.Set(fmt.Sprintf("enrolments[%d][suspend]", i), strconv.Itoa(enrol.Suspend))
+		}
+	}
+
+	// kirim post ke moodle
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal melakukan request ke Moodle: %v", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[ERROR] CreateCourse: gagal membaca body: %v", err)
+		return err
+	}
+	log.Printf("[DEBUG] CreateCourse Raw Response: %s", string(body))
+
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		return &moodleErr
+	}
+	
+	return nil
+}
