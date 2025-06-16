@@ -15,4 +15,5 @@ type MoodleService interface {
 	AssignRole(req web.MoodleRoleAssignRequest) error
 	CreateCourse(req web.MoodleCreateCourseRequest) ([]web.MoodleCreateCourseResponse, error)
 	EnrollManualEnrolUsers(req web.MoodleManualEnrollRequest) error
+	CreateCourseWithEnrollUser(req web.MoodleCreateCourseWithEnrollUserRequest) (*web.MoodleCreateCourseWithEnrollUserResponse, error)
 }

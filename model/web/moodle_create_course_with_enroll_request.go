@@ -1,7 +1,7 @@
 package web
 
-type MoodleCreateCourseWithEnrollRequest struct {
-	CourseData    MoodleCourseData `json:"course_data"`
-	TeacherUserID int              `json:"teacher_user_id"`
-	TeacherRoleID int              `json:"teacher_role_id"`
+type MoodleCreateCourseWithEnrollUserRequest struct {
+	CourseData MoodleCourseData `json:"course_data"`
+	UserID     int              `json:"teacher_user_id"`
+	RoleID     int              `json:"teacher_role_id"`
 }

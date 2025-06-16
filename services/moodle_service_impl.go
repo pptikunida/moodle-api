@@ -504,3 +504,49 @@ func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollReq
 }
 
 // function untuk createCourse dan Enroll
+func (s *MoodleServiceImpl) CreateCourseWithEnrollUser(req web.MoodleCreateCourseWithEnrollUserRequest) (*web.MoodleCreateCourseWithEnrollUserResponse, error) {
+	// panggil createCourse
+	log.Printf("[INFO] CreateCourseAndEnrolUser: Memulai pembuatan kursus...")
+	courseReq := web.MoodleCreateCourseRequest{
+		Courses: []web.MoodleCourseData{req.CourseData},
+	}
+	createdCourses, err := s.CreateCourse(courseReq)
+	if err != nil {
+		log.Printf("[ERROR] Gagal pada langkah pembuatan kursus: %v", err)
+		return nil, err
+	}
+	if len(createdCourses) == 0 {
+		return nil, errors.New("pembuatan kursus berhasil namun tidak ada data yang dikembalikan Moodle")
+	}
+	newCourse := createdCourses[0]
+	log.Printf("[INFO] Kursus berhasil dibuat dengan ID: %d", newCourse.ID)
+
+	// panggil enrollManualEnrollUsers
+	log.Printf("[INFO] Memulai pendaftaran pengguna (UserID: %d) ke kursus (CourseID: %d)", req.UserID, newCourse.ID)
+	enrollReq := web.MoodleManualEnrollRequest{
+		Enrolments: []web.MoodleManualEnroll{
+			{
+				RoleID:   req.RoleID,
+				UserID:   req.UserID,
+				CourseID: newCourse.ID,
+			},
+		},
+	}
+	err = s.EnrollManualEnrolUsers(enrollReq)
+	if err != nil {
+		log.Printf("[ERROR] Gagal pada langkah pendaftaran pengguna: %v", err)
+		return nil, fmt.Errorf("kursus berhasil dibuat, tetapi gagal mendaftarkan pengguna: %w", err)
+	}
+	log.Printf("[INFO] Pendaftaran pengguna berhasil.")
+
+	// response
+	finalResponse := &web.MoodleCreateCourseWithEnrollUserResponse{
+		CourseID:        newCourse.ID,
+		CourseFullName:  newCourse.Fullname,
+		CourseShortName: newCourse.ShortName,
+		EnrolledUserID:  req.UserID,
+		AssignedRoleID:  req.RoleID,
+	}
+
+	return finalResponse, nil
+}
