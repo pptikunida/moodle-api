@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rizkycahyono97/moodle-api/model/web"
-	"github.com/rizkycahyono97/moodle-api/utils/helpers"
-	"github.com/rizkycahyono97/moodle-api/utils/validation"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/rizkycahyono97/moodle-api/model/web"
+	"github.com/rizkycahyono97/moodle-api/utils/helpers"
+	"github.com/rizkycahyono97/moodle-api/utils/validation"
 )
 
 type MoodleServiceImpl struct {
@@ -23,7 +24,7 @@ func NewMoodleService(client *http.Client) MoodleService {
 	}
 }
 
-func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
+func (s *MoodleServiceImpl) CoreWebserviceGetSiteInfo() (*web.MoodleStatusResponse, error) {
 	// Load Env & Moodle Request
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
@@ -59,7 +60,7 @@ func (s *MoodleServiceImpl) CheckStatus() (*web.MoodleStatusResponse, error) {
 	return &status, nil
 }
 
-func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
+func (s *MoodleServiceImpl) CoreUserCreateUsers(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error) {
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
 		return nil, err
@@ -102,15 +103,15 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 
 	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
-		return nil, fmt.Errorf("gagal memanggil Moodle untuk CreateUser: %w", err)
+		return nil, fmt.Errorf("gagal memanggil Moodle untuk CoreUserCreateUsers: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("gagal membaca body respons CreateUser: %w", err)
+		return nil, fmt.Errorf("gagal membaca body respons CoreUserCreateUsers: %w", err)
 	}
-	log.Printf("[CreateUser] Raw Response: %s", string(body))
+	log.Printf("[CoreUserCreateUsers] Raw Response: %s", string(body))
 
 	var moodleErr web.MoodleException
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
@@ -119,13 +120,13 @@ func (s *MoodleServiceImpl) CreateUser(req web.MoodleUserCreateRequest) ([]web.M
 
 	var result []web.MoodleUserCreateResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateUser: %w", err)
+		return nil, fmt.Errorf("gagal unmarshal respons sukses CoreUserCreateUsers: %w", err)
 	}
 
 	return result, nil
 }
 
-func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error) {
+func (s *MoodleServiceImpl) CoreUserGetUsersByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error) {
 	// validasi field yang diperbolehkan
 	allowedFields := map[string]bool{
 		"id":       true,
@@ -188,7 +189,7 @@ func (s *MoodleServiceImpl) GetUserByField(req web.MoodleUserGetByFieldRequest) 
 	return result, nil
 }
 
-func (s *MoodleServiceImpl) UpdateUsers(req []web.MoodleUserUpdateRequest) error {
+func (s *MoodleServiceImpl) CoreUserUpdateUsers(req []web.MoodleUserUpdateRequest) error {
 	// load moodle conf
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
@@ -282,7 +283,7 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		return err
 	}
 
-	createUserReq := web.MoodleUserCreateRequest{
+	CoreUserCreateUsersReq := web.MoodleUserCreateRequest{
 		Username:  req.Username,
 		Password:  req.Password,
 		Firstname: req.FirstName,
@@ -298,7 +299,7 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		CalendarType: "gregorian",
 	}
 
-	createdUsers, createErr := s.CreateUser(createUserReq)
+	createdUsers, createErr := s.CoreUserCreateUsers(CoreUserCreateUsersReq)
 	if createErr != nil {
 		log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
 		return fmt.Errorf("gagal membuat user di moodle: %w", createErr)
@@ -319,7 +320,7 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		},
 	}
 
-	if err := s.AssignRole(assignReq); err != nil {
+	if err := s.CoreRoleAssignRoles(assignReq); err != nil {
 		log.Printf("[WARN] UserSync: Gagal assign role ke user '%s'. Error: %v", req.Username, err)
 	} else {
 		log.Printf("[INFO] UserSync: Berhasil assign role ID %d ke user '%s'", req.RoleID, req.Username)
@@ -329,7 +330,7 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 	return nil
 }
 
-func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
+func (s *MoodleServiceImpl) CoreRoleAssignRoles(req web.MoodleRoleAssignRequest) error {
 	moodleUrl, token, err := helpers.GetMoodleConfig()
 	if err != nil {
 		return nil
@@ -352,7 +353,7 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 		}
 	}
 
-	log.Printf("[DEBUG] AssignRole Service: Form data yang akan dikirim:\n%s", form.Encode())
+	log.Printf("[DEBUG] CoreRoleAssignRoles Service: Form data yang akan dikirim:\n%s", form.Encode())
 
 	// kirim req POST ke moodle
 	resp, err := s.client.PostForm(moodleUrl, form)
@@ -366,7 +367,7 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 		return fmt.Errorf("error reading response body: %w", err)
 	}
 
-	log.Printf("[DEBUG] AssignRole Service: Raw response dari Moodle: %s", string(body))
+	log.Printf("[DEBUG] CoreRoleAssignRoles Service: Raw response dari Moodle: %s", string(body))
 
 	// cek response
 	var moodleErr web.MoodleException
@@ -378,11 +379,11 @@ func (s *MoodleServiceImpl) AssignRole(req web.MoodleRoleAssignRequest) error {
 
 }
 
-func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]web.MoodleCreateCourseResponse, error) {
+func (s *MoodleServiceImpl) CoreCourseCreateCourses(req web.MoodleCoreCourseCreateCoursesRequest) ([]web.MoodleCoreCourseCreateCoursesResponse, error) {
 	// load moodle conf
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal mendapatkan konfigurasi Moodle: %v", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal mendapatkan konfigurasi Moodle: %v", err)
 		return nil, err
 	}
 
@@ -425,17 +426,17 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 	// kirim post ke moodle
 	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal melakukan request ke Moodle: %v", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal melakukan request ke Moodle: %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal membaca body: %v", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal membaca body: %v", err)
 		return nil, err
 	}
-	log.Printf("[DEBUG] CreateCourse Raw Response: %s", string(body))
+	log.Printf("[DEBUG] CoreCourseCreateCourses Raw Response: %s", string(body))
 
 	var moodleErr web.MoodleException
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
@@ -443,10 +444,10 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 	}
 
 	// jika tidak error
-	var moodleResp []web.MoodleCreateCourseResponse
+	var moodleResp []web.MoodleCoreCourseCreateCoursesResponse
 	if err := json.Unmarshal(body, &moodleResp); err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal decode response sukses: %v", err)
-		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateCourse: %w", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal decode response sukses: %v", err)
+		return nil, fmt.Errorf("gagal unmarshal respons sukses CoreCourseCreateCourses: %w", err)
 	}
 
 	// Enroll users
@@ -454,7 +455,7 @@ func (s *MoodleServiceImpl) CreateCourse(req web.MoodleCreateCourseRequest) ([]w
 	return moodleResp, nil
 }
 
-func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollRequest) error {
+func (s *MoodleServiceImpl) EnrolManualEnrolUsers(req web.MoodleManualEnrollRequest) error {
 	// load config moodle
 	moodleURL, token, err := helpers.GetMoodleConfig()
 	if err != nil {
@@ -483,17 +484,17 @@ func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollReq
 	// kirim post ke moodle
 	resp, err := s.client.PostForm(moodleURL, form)
 	if err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal melakukan request ke Moodle: %v", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal melakukan request ke Moodle: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("[ERROR] CreateCourse: gagal membaca body: %v", err)
+		log.Printf("[ERROR] CoreCourseCreateCourses: gagal membaca body: %v", err)
 		return err
 	}
-	log.Printf("[DEBUG] CreateCourse Raw Response: %s", string(body))
+	log.Printf("[DEBUG] CoreCourseCreateCourses Raw Response: %s", string(body))
 
 	var moodleErr web.MoodleException
 	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
@@ -503,14 +504,14 @@ func (s *MoodleServiceImpl) EnrollManualEnrolUsers(req web.MoodleManualEnrollReq
 	return nil
 }
 
-// function untuk createCourse dan Enroll
+// function untuk CoreCourseCreateCourses dan Enroll
 func (s *MoodleServiceImpl) CreateCourseWithEnrollUser(req web.MoodleCreateCourseWithEnrollUserRequest) (*web.MoodleCreateCourseWithEnrollUserResponse, error) {
-	// panggil createCourse
-	log.Printf("[INFO] CreateCourseAndEnrolUser: Memulai pembuatan kursus...")
-	courseReq := web.MoodleCreateCourseRequest{
+	// panggil CoreCourseCreateCourses
+	log.Printf("[INFO] CoreCourseCreateCoursesAndEnrolUser: Memulai pembuatan kursus...")
+	courseReq := web.MoodleCoreCourseCreateCoursesRequest{
 		Courses: []web.MoodleCourseData{req.CourseData},
 	}
-	createdCourses, err := s.CreateCourse(courseReq)
+	createdCourses, err := s.CoreCourseCreateCourses(courseReq)
 	if err != nil {
 		log.Printf("[ERROR] Gagal pada langkah pembuatan kursus: %v", err)
 		return nil, err
@@ -532,7 +533,7 @@ func (s *MoodleServiceImpl) CreateCourseWithEnrollUser(req web.MoodleCreateCours
 			},
 		},
 	}
-	err = s.EnrollManualEnrolUsers(enrollReq)
+	err = s.EnrolManualEnrolUsers(enrollReq)
 	if err != nil {
 		log.Printf("[ERROR] Gagal pada langkah pendaftaran pengguna: %v", err)
 		return nil, fmt.Errorf("kursus berhasil dibuat, tetapi gagal mendaftarkan pengguna: %w", err)

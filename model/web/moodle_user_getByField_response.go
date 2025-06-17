@@ -31,11 +31,11 @@ type MoodleUserGetByFieldResponse struct {
 	Country           string                               `json:"country,omitempty"`
 	ProfileImageSmall string                               `json:"profileimageurlsmall"`
 	ProfileImage      string                               `json:"profileimageurl"`
-	CustomFields      []MoodleUserCustomGetUserByField     `json:"customfields,omitempty"`
-	Preferences       []MoodleUserPreferenceGetUserByField `json:"preferences,omitempty"`
+	CustomFields      []MoodleUserCustomCoreUserGetUsersByField     `json:"customfields,omitempty"`
+	Preferences       []MoodleUserPreferenceCoreUserGetUsersByField `json:"preferences,omitempty"`
 }
 
-type MoodleUserCustomGetUserByField struct {
+type MoodleUserCustomCoreUserGetUsersByField struct {
 	Type         string `json:"type"`
 	Value        string `json:"value"`
 	DisplayValue string `json:"displayvalue,omitempty"`
@@ -43,7 +43,7 @@ type MoodleUserCustomGetUserByField struct {
 	ShortName    string `json:"shortname"`
 }
 
-type MoodleUserPreferenceGetUserByField struct {
+type MoodleUserPreferenceCoreUserGetUsersByField struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }

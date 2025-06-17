@@ -1,6 +1,6 @@
 package web
 
-type MoodleCreateCourseResponse struct {
+type MoodleCoreCourseCreateCoursesResponse struct {
 	ID         int    `json:"id"`
 	ShortName  string `json:"shortname"`
 	Fullname   string `json:"fullname"`

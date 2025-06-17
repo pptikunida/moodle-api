@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+
 	"github.com/rizkycahyono97/moodle-api/contracts" // hanya interface!
 	"github.com/rizkycahyono97/moodle-api/model/web"
 )
@@ -10,7 +11,7 @@ import (
 var ErrNotFound = errors.New("data dengan kriteria yang diberikan tidak ditemukan") //
 
 func CheckMoodleDuplicateField(svc contracts.MoodleUserGetter, field, value string) error {
-	users, err := svc.GetUserByField(web.MoodleUserGetByFieldRequest{
+	users, err := svc.CoreUserGetUsersByField(web.MoodleUserGetByFieldRequest{
 		Field:  field,
 		Values: []string{value},
 	})

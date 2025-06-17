@@ -7,13 +7,13 @@ import (
 
 type MoodleService interface {
 	contracts.MoodleUserGetter // men-embed interface baru menghindari cyclic import
-	CheckStatus() (*web.MoodleStatusResponse, error)
-	CreateUser(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error)
-	GetUserByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error)
-	UpdateUsers(req []web.MoodleUserUpdateRequest) error
+	CoreWebserviceGetSiteInfo() (*web.MoodleStatusResponse, error)
+	CoreUserCreateUsers(req web.MoodleUserCreateRequest) ([]web.MoodleUserCreateResponse, error)
+	CoreUserGetUsersByField(req web.MoodleUserGetByFieldRequest) ([]web.MoodleUserGetByFieldResponse, error)
+	CoreUserUpdateUsers(req []web.MoodleUserUpdateRequest) error
 	UserSync(req web.MoodleUserSyncRequest) error
-	AssignRole(req web.MoodleRoleAssignRequest) error
-	CreateCourse(req web.MoodleCreateCourseRequest) ([]web.MoodleCreateCourseResponse, error)
-	EnrollManualEnrolUsers(req web.MoodleManualEnrollRequest) error
+	CoreRoleAssignRoles(req web.MoodleRoleAssignRequest) error
+	CoreCourseCreateCourses(req web.MoodleCoreCourseCreateCoursesRequest) ([]web.MoodleCoreCourseCreateCoursesResponse, error)
+	EnrolManualEnrolUsers(req web.MoodleManualEnrollRequest) error
 	CreateCourseWithEnrollUser(req web.MoodleCreateCourseWithEnrollUserRequest) (*web.MoodleCreateCourseWithEnrollUserResponse, error)
 }

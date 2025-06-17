@@ -3,12 +3,13 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/model/web"
 	"github.com/rizkycahyono97/moodle-api/services"
 	"github.com/rizkycahyono97/moodle-api/utils/validation"
-	"log"
-	"net/http"
 )
 
 type MoodleController struct {
@@ -19,8 +20,8 @@ func NewMoodleController(moodleService services.MoodleService) *MoodleController
 	return &MoodleController{moodleService: moodleService}
 }
 
-func (s *MoodleController) CheckStatus(c *gin.Context) {
-	result, err := s.moodleService.CheckStatus()
+func (s *MoodleController) CoreWebserviceGetSiteInfo(c *gin.Context) {
+	result, err := s.moodleService.CoreWebserviceGetSiteInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
@@ -36,14 +37,14 @@ func (s *MoodleController) CheckStatus(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) CreateUser(c *gin.Context) {
+func (s *MoodleController) CoreUserCreateUsers(c *gin.Context) {
 	var req web.MoodleUserCreateRequest
 
 	fmt.Println("[DEBUG] Received Body:", req) // log
 
 	// Bind JSON
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[CreateUser] Error: %v", err) // log
+		log.Printf("[CoreUserCreateUsers] Error: %v", err) // log
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
 			Code:    "INVALID_PARAMS",
 			Message: err.Error(),
@@ -52,12 +53,12 @@ func (s *MoodleController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[CreateUser] Received Request: %+v", req) // log
+	log.Printf("[CoreUserCreateUsers] Received Request: %+v", req) // log
 
 	// Call service
-	result, err := s.moodleService.CreateUser(req)
+	result, err := s.moodleService.CoreUserCreateUsers(req)
 	if err != nil {
-		log.Println("[CreateUser] Error:", err)
+		log.Println("[CoreUserCreateUsers] Error:", err)
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: err.Error(),
@@ -73,7 +74,7 @@ func (s *MoodleController) CreateUser(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) GetUserByField(c *gin.Context) {
+func (s *MoodleController) CoreUserGetUsersByField(c *gin.Context) {
 	var req web.MoodleUserGetByFieldRequest
 
 	// Bind JSON request body ke struct
@@ -87,7 +88,7 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	}
 
 	// service
-	users, err := s.moodleService.GetUserByField(req)
+	users, err := s.moodleService.CoreUserGetUsersByField(req)
 	if err != nil {
 		log.Printf("[DIAGNOSA] Controller menerima error. Tipe: %T, Isi: %v", err, err)
 		if errors.Is(err, validation.ErrNotFound) {
@@ -120,7 +121,7 @@ func (s *MoodleController) GetUserByField(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) UpdateUser(c *gin.Context) {
+func (s *MoodleController) CoreUserUpdateUsers(c *gin.Context) {
 	var req []web.MoodleUserUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
@@ -132,7 +133,7 @@ func (s *MoodleController) UpdateUser(c *gin.Context) {
 	}
 
 	//periksa jika ada data
-	err := s.moodleService.UpdateUsers(req)
+	err := s.moodleService.CoreUserUpdateUsers(req)
 	if err != nil {
 		if moodleErr, ok := err.(*web.MoodleException); ok {
 			c.JSON(http.StatusBadRequest, web.ApiResponse{
@@ -187,7 +188,7 @@ func (s *MoodleController) UserSync(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) AssignRole(c *gin.Context) {
+func (s *MoodleController) CoreRoleAssignRoles(c *gin.Context) {
 	var req web.MoodleRoleAssignRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -198,10 +199,10 @@ func (s *MoodleController) AssignRole(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[DEBUG] AssignRole Controller: Menerima request %+v", req)
+	log.Printf("[DEBUG] CoreRoleAssignRoles Controller: Menerima request %+v", req)
 
 	// panggil service
-	if err := s.moodleService.AssignRole(req); err != nil {
+	if err := s.moodleService.CoreRoleAssignRoles(req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
 			Code:    "USER_ASSIGN_FAILED",
 			Message: err.Error(),
@@ -215,8 +216,8 @@ func (s *MoodleController) AssignRole(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) CreateCourse(c *gin.Context) {
-	var req web.MoodleCreateCourseRequest
+func (s *MoodleController) CoreCourseCreateCourses(c *gin.Context) {
+	var req web.MoodleCoreCourseCreateCoursesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
 			Code:    "INVALID_REQUEST",
@@ -225,7 +226,7 @@ func (s *MoodleController) CreateCourse(c *gin.Context) {
 		return
 	}
 
-	courses, err := s.moodleService.CreateCourse(req)
+	courses, err := s.moodleService.CoreCourseCreateCourses(req)
 	if err != nil {
 		if moodleErr, ok := err.(*web.MoodleException); ok {
 			c.JSON(http.StatusBadRequest, web.ApiResponse{
@@ -249,7 +250,7 @@ func (s *MoodleController) CreateCourse(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) EnrollManualEnrolUsers(c *gin.Context) {
+func (s *MoodleController) EnrolManualEnrolUsers(c *gin.Context) {
 	var req web.MoodleManualEnrollRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -261,7 +262,7 @@ func (s *MoodleController) EnrollManualEnrolUsers(c *gin.Context) {
 		return
 	}
 
-	if err := s.moodleService.EnrollManualEnrolUsers(req); err != nil {
+	if err := s.moodleService.EnrolManualEnrolUsers(req); err != nil {
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "500",
 			Message: "An internal error occurred" + err.Error(),
@@ -277,7 +278,7 @@ func (s *MoodleController) EnrollManualEnrolUsers(c *gin.Context) {
 	})
 }
 
-func (s *MoodleController) CreateCourseWithEnrolment(c *gin.Context) {
+func (s *MoodleController) CreateCourseWithEnrollUser(c *gin.Context) {
 	var req web.MoodleCreateCourseWithEnrollUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
