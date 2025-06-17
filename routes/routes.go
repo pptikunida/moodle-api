@@ -11,7 +11,7 @@ func SetupRouter(
 	moodleController *controllers.MoodleController) {
 
 	// protected routes
-	protected := r.Group("/api")
+	protected := r.Group("/api/v1")
 	protected.Use(middleware.ApiKeyAuthMiddleware())
 	{
 		protected.GET("/moodle/site-info", moodleController.CoreWebserviceGetSiteInfo)
