@@ -24,14 +24,14 @@ func (s *MoodleController) CoreWebserviceGetSiteInfo(c *gin.Context) {
 	result, err := s.moodleService.CoreWebserviceGetSiteInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
+			Code:    "500",
 			Message: err.Error(),
 			Data:    nil,
 		})
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "OK",
 		Data:    result,
 	})
@@ -46,7 +46,7 @@ func (s *MoodleController) CoreUserCreateUsers(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("[CoreUserCreateUsers] Error: %v", err) // log
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_PARAMS",
+			Code:    "400",
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -60,7 +60,7 @@ func (s *MoodleController) CoreUserCreateUsers(c *gin.Context) {
 	if err != nil {
 		log.Println("[CoreUserCreateUsers] Error:", err)
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
+			Code:    "500",
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -68,7 +68,7 @@ func (s *MoodleController) CoreUserCreateUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "OK",
 		Data:    result,
 	})
@@ -80,7 +80,7 @@ func (s *MoodleController) CoreUserGetUsersByField(c *gin.Context) {
 	// Bind JSON request body ke struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_REQUEST_BODY",
+			Code:    "400",
 			Message: "Format body request tidak valid.",
 			Data:    err.Error(),
 		})
@@ -93,7 +93,7 @@ func (s *MoodleController) CoreUserGetUsersByField(c *gin.Context) {
 		log.Printf("[DIAGNOSA] Controller menerima error. Tipe: %T, Isi: %v", err, err)
 		if errors.Is(err, validation.ErrNotFound) {
 			c.JSON(http.StatusNotFound, web.ApiResponse{
-				Code:    "DATA_NOT_FOUND",
+				Code:    "404",
 				Message: err.Error(), // Menggunakan pesan dari variabel ErrNotFound
 			})
 			return
@@ -108,14 +108,14 @@ func (s *MoodleController) CoreUserGetUsersByField(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
+			Code:    "500",
 			Message: "Terjadi kesalahan pada server.",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "OK",
 		Data:    users,
 	})
@@ -125,7 +125,7 @@ func (s *MoodleController) CoreUserUpdateUsers(c *gin.Context) {
 	var req []web.MoodleUserUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_PARAMS",
+			Code:    "400",
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -144,7 +144,7 @@ func (s *MoodleController) CoreUserUpdateUsers(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
+			Code:    "500",
 			Message: "An internal error occurred",
 			Data:    err.Error(), // Kirim pesan error internal untuk debug
 		})
@@ -152,7 +152,7 @@ func (s *MoodleController) CoreUserUpdateUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "Users updated successfully",
 	})
 }
@@ -163,7 +163,7 @@ func (s *MoodleController) UserSync(c *gin.Context) {
 	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_REQUEST",
+			Code:    "400",
 			Message: "Data yang dikirim tidak valid: " + err.Error(),
 		})
 		return
@@ -173,7 +173,7 @@ func (s *MoodleController) UserSync(c *gin.Context) {
 	err := s.moodleService.UserSync(req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "USER_SYNC_FAILED",
+			Code:    "400",
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -182,7 +182,7 @@ func (s *MoodleController) UserSync(c *gin.Context) {
 
 	// Berhasil
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "User synced successfully",
 		Data:    nil,
 	})
@@ -193,7 +193,7 @@ func (s *MoodleController) CoreRoleAssignRoles(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_REQUEST",
+			Code:    "400",
 			Message: "Data yang dikirim tidak valid: " + err.Error(),
 		})
 		return
@@ -204,14 +204,14 @@ func (s *MoodleController) CoreRoleAssignRoles(c *gin.Context) {
 	// panggil service
 	if err := s.moodleService.CoreRoleAssignRoles(req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "USER_ASSIGN_FAILED",
+			Code:    "400",
 			Message: err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "User assigned successfully",
 	})
 }
@@ -220,7 +220,7 @@ func (s *MoodleController) CoreCourseCreateCourses(c *gin.Context) {
 	var req web.MoodleCoreCourseCreateCoursesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, web.ApiResponse{
-			Code:    "INVALID_REQUEST",
+			Code:    "400",
 			Message: "Data yang dikirim tidak valid: " + err.Error(),
 		})
 		return
@@ -237,14 +237,14 @@ func (s *MoodleController) CoreCourseCreateCourses(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
+			Code:    "500",
 			Message: "An internal error occurred",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, web.ApiResponse{
-		Code:    "OK",
+		Code:    "200",
 		Message: "Courses created successfully",
 		Data:    courses,
 	})
