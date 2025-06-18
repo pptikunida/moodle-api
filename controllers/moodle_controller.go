@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/model/web"
@@ -322,4 +323,17 @@ func (s *MoodleController) CreateCourseWithEnrollUser(c *gin.Context) {
 		Data:    newCourseInfo,
 	})
 
+}
+
+func (s *MoodleController) ServeSwaggerSpec(c *gin.Context) {
+	//baca file
+	file, err := os.ReadFile("./apispec.json")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, web.ApiResponse{
+			Code:    "500",
+			Message: "Could not read API spec file",
+		})
+		return
+	}
+	c.Data(http.StatusOK, "application/json", file)
 }

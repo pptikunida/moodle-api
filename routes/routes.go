@@ -4,11 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rizkycahyono97/moodle-api/controllers"
 	"github.com/rizkycahyono97/moodle-api/middleware"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter(
 	r *gin.Engine,
 	moodleController *controllers.MoodleController) {
+
+	//swagger routes
+	swaggerURL := ginSwagger.URL("/apispec.json")
 
 	// protected routes
 	protected := r.Group("/api/v1")
@@ -23,5 +28,9 @@ func SetupRouter(
 		protected.POST("/moodle/courses/course", moodleController.CoreCourseCreateCourses)
 		protected.POST("/moodle/courses/enrol/manual", moodleController.EnrolManualEnrolUsers)
 		protected.POST("/moodle/courses/create-with-enrolment", moodleController.CreateCourseWithEnrollUser)
+
+		//swagger
+		protected.GET("/apispec.json", moodleController.ServeSwaggerSpec)
+		protected.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerURL))
 	}
 }
