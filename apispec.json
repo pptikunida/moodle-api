@@ -584,45 +584,53 @@
       "MoodleUserCreateRequest": {
         "type": "object",
         "properties": {
-          "username": { "type": "string", "example": "john.doe5" },
-          "auth": { "type": "string", "example": "manual" },
-          "password": { "type": "string", "example": "SecurePass123!" },
-          "firstname": { "type": "string", "example": "John" },
-          "lastname": { "type": "string", "example": "Doe 5" },
-          "email": { "type": "string", "example": "john.doe5@example.com" },
-          "city": { "type": "string", "example": "Lamongan" },
-          "country": { "type": "string", "example": "ID" },
-          "timezone": { "type": "string", "example": "Asia/Jakarta" },
-          "description": { "type": "string", "example": "Student" },
-          "idnumber": { "type": "string", "example": "442023611061" },
-          "lang": { "type": "string", "example": "en" },
-          "calendartype": { "type": "string", "example": "gregorian" },
-          "customfields": {
+          "users": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "type": { "type": "string", "example": "angkatan" },
-                "value": { "type": "string", "example": "2025" }
+                "username": { "type": "string", "example": "john.doe6" },
+                "auth": { "type": "string", "example": "manual" },
+                "password": { "type": "string", "example": "SecurePass123!" },
+                "firstname": { "type": "string", "example": "John" },
+                "lastname": { "type": "string", "example": "Doe 6" },
+                "email": { "type": "string", "example": "john.doe6@example.com" },
+                "city": { "type": "string", "example": "Lamongan" },
+                "country": { "type": "string", "example": "ID" },
+                "timezone": { "type": "string", "example": "Asia/Jakarta" },
+                "description": { "type": "string", "example": "Student" },
+                "idnumber": { "type": "string", "example": "442023611062" },
+                "lang": { "type": "string", "example": "en" },
+                "calendartype": { "type": "string", "example": "gregorian" },
+                "customfields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string", "example": "angkatan" },
+                      "value": { "type": "string", "example": "2025" }
+                    },
+                    "required": ["type", "value"]
+                  }
+                },
+                "preferences": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string", "example": "auth_forcepasswordchange" },
+                      "value": { "type": "string", "example": "true" }
+                    },
+                    "required": ["type", "value"]
+                  }
+                }
               },
-              "required": ["type", "value"]
-            }
-          },
-          "preferences": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": { "type": "string", "example": "auth_forcepasswordchange" },
-                "value": { "type": "string", "example": "true" }
-              },
-              "required": ["type", "value"]
+              "required": [
+                "username", "auth", "password", "firstname", "lastname", "email", "idnumber"
+              ]
             }
           }
-        },
-        "required": [
-          "username", "auth", "password", "firstname", "lastname", "email", "idnumber"
-        ]
+        }
       },
       "MoodleUserUpdateRequest": {
         "type": "array",

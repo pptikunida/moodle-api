@@ -10,7 +10,7 @@ type MoodleUserPreferenceField struct {
 	Value string `json:"value"`
 }
 
-type MoodleUserCreateRequest struct {
+type MoodleUserCreateData struct {
 	CreatePassword    *int                        `json:"createpassword,omitempty"`
 	Username          string                      `json:"username"`
 	Auth              string                      `json:"auth,omitempty"` // default: manual
@@ -40,4 +40,9 @@ type MoodleUserCreateRequest struct {
 	MailFormat        *int                        `json:"mailformat,omitempty"`
 	CustomFields      []MoodleUserCustomField     `json:"customfields,omitempty"`
 	Preferences       []MoodleUserPreferenceField `json:"preferences,omitempty"`
+}
+
+// array of object
+type MoodleUserCreateRequest struct {
+	Users []MoodleUserCreateData `json:"users"`
 }

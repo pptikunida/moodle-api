@@ -68,37 +68,38 @@ func (s *MoodleServiceImpl) CoreUserCreateUsers(req web.MoodleUserCreateRequest)
 
 	// VALIDASI
 	err = validation.CheckMoodleDuplicateFields(s, map[string]string{
-		"username": req.Username,
-		"email":    req.Email,
-		"idnumber": req.IdNumber,
+		"username": req.Users[0].Username,
+		"email":    req.Users[0].Email,
+		"idnumber": req.Users[0].IdNumber,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	form := helpers.NewMoodleForm(token, "core_user_create_users")
-	// Mengisi form dengan semua data dari request
-	form.Set("users[0][username]", req.Username)
-	form.Set("users[0][password]", req.Password)
-	form.Set("users[0][firstname]", req.Firstname)
-	form.Set("users[0][lastname]", req.Lastname)
-	form.Set("users[0][email]", req.Email)
-	form.Set("users[0][idnumber]", req.IdNumber)
-	form.Set("users[0][auth]", req.Auth)
-	form.Set("users[0][city]", req.City)
-	form.Set("users[0][country]", req.Country)
-	form.Set("users[0][timezone]", req.Timezone)
-	form.Set("users[0][description]", req.Description)
-	form.Set("users[0][lang]", req.Lang)
-	form.Set("users[0][calendartype]", req.CalendarType)
+	for i, user := range req.Users {
+		form.Set(fmt.Sprintf("users[%d][username]", i), user.Username)
+		form.Set(fmt.Sprintf("users[%d][password]", i), user.Password)
+		form.Set(fmt.Sprintf("users[%d][firstname]", i), user.Firstname)
+		form.Set(fmt.Sprintf("users[%d][lastname]", i), user.Lastname)
+		form.Set(fmt.Sprintf("users[%d][email]", i), user.Email)
+		form.Set(fmt.Sprintf("users[%d][idnumber]", i), user.IdNumber)
+		form.Set(fmt.Sprintf("users[%d][auth]", i), user.Auth)
+		form.Set(fmt.Sprintf("users[%d][city]", i), user.City)
+		form.Set(fmt.Sprintf("users[%d][country]", i), user.Country)
+		form.Set(fmt.Sprintf("users[%d][timezone]", i), user.Timezone)
+		form.Set(fmt.Sprintf("users[%d][description]", i), user.Description)
+		form.Set(fmt.Sprintf("users[%d][lang]", i), user.Lang)
+		form.Set(fmt.Sprintf("users[%d][calendartype]", i), user.CalendarType)
 
-	for i, cf := range req.CustomFields {
-		form.Set(fmt.Sprintf("users[0][customfields][%d][type]", i), cf.Type)
-		form.Set(fmt.Sprintf("users[0][customfields][%d][value]", i), cf.Value)
-	}
-	for i, pref := range req.Preferences {
-		form.Set(fmt.Sprintf("users[0][preferences][%d][type]", i), pref.Type)
-		form.Set(fmt.Sprintf("users[0][preferences][%d][value]", i), pref.Value)
+		for j, cf := range user.CustomFields {
+			form.Set(fmt.Sprintf("users[%d][customfields][%d][type]", i, j), cf.Type)
+			form.Set(fmt.Sprintf("users[%d][customfields][%d][value]", i, j), cf.Value)
+		}
+		for j, pref := range user.Preferences {
+			form.Set(fmt.Sprintf("users[%d][preferences][%d][type]", i, j), pref.Type)
+			form.Set(fmt.Sprintf("users[%d][preferences][%d][value]", i, j), pref.Value)
+		}
 	}
 
 	resp, err := s.client.PostForm(moodleURL, form)
@@ -283,7 +284,7 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		return err
 	}
 
-	CoreUserCreateUsersReq := web.MoodleUserCreateRequest{
+	userData := web.MoodleUserCreateData{
 		Username:  req.Username,
 		Password:  req.Password,
 		Firstname: req.FirstName,
@@ -299,7 +300,12 @@ func (s *MoodleServiceImpl) UserSync(req web.MoodleUserSyncRequest) error {
 		CalendarType: "gregorian",
 	}
 
-	createdUsers, createErr := s.CoreUserCreateUsers(CoreUserCreateUsersReq)
+	//merubah struktur request
+	createUserReq := web.MoodleUserCreateRequest{
+		Users: []web.MoodleUserCreateData{userData},
+	}
+
+	createdUsers, createErr := s.CoreUserCreateUsers(createUserReq)
 	if createErr != nil {
 		log.Printf("[ERROR] UserSync: Gagal membuat pengguna '%s' di Moodle. Error: %v", req.Username, createErr)
 		return fmt.Errorf("gagal membuat user di moodle: %w", createErr)

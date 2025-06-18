@@ -59,6 +59,14 @@ func (s *MoodleController) CoreUserCreateUsers(c *gin.Context) {
 	result, err := s.moodleService.CoreUserCreateUsers(req)
 	if err != nil {
 		log.Println("[CoreUserCreateUsers] Error:", err)
+		if moodleErr, ok := err.(*web.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, web.ApiResponse{
 			Code:    "500",
 			Message: err.Error(),
