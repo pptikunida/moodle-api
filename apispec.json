@@ -1,0 +1,834 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Moodle-SIAKAD Integration API",
+    "version": "1.0.0",
+    "description": "Dokumentasi API integrasi Moodle dengan SIAKAD"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9082/api/v1"
+    }
+  ],
+  "paths": {
+    "/moodle/site-info": {
+      "get": {
+        "tags": ["Site"],
+        "summary": "Get Moodle site information for authenticated user",
+        "responses": {
+          "200": {
+            "description": "Site info retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string", "example": "200" },
+                    "message": { "type": "string", "example": "OK" },
+                    "data": {
+                      "$ref": "#/components/schemas/MoodleSiteInfoResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/moodle/users/sync": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Sinkronisasi user dari SIAKAD ke Moodle",
+        "description": "jika di moodle tidak ada user maka buatkan jika ada biarkan.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MoodleUserSyncRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User synced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "200"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User synced successfully"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data yang dikirim tidak valid"
+          }
+        }
+      }
+    },
+    "/moodle/users": {
+        "post": {
+          "tags": ["Users"],
+          "summary": "Create a new Moodle user",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoodleUserCreateRequest"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "User successfully created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "example": "200"
+                      },
+                      "message": {
+                        "type": "string",
+                        "example": "OK"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 37
+                            },
+                            "username": {
+                              "type": "string",
+                              "example": "john.doe5"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request"
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+    },
+    "/moodle/users/update": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Update Moodle users",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleUserUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Users updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "200"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Users updated successfully"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/moodle/users/lookup-by-field": {
+      "post": {
+        "tags": ["Search"],
+        "summary": "Get Moodle users by field",
+        "description": "mencari berdasarkan field: id, idnumber, username, email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleUserLookupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Users found by field",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "200"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "example": 35 },
+                          "username": { "type": "string", "example": "rizkycahyonoputra" },
+                          "firstname": { "type": "string", "example": "Rizky" },
+                          "lastname": { "type": "string", "example": "Cahyono Putra" },
+                          "fullname": { "type": "string", "example": "Rizky Cahyono Putra" },
+                          "email": {
+                            "type": "string",
+                            "example": "442023611032@student.cs.unida.gontor.ac.id"
+                          },
+                          "idnumber": { "type": "string", "example": "442023611032" },
+                          "auth": { "type": "string", "example": "manual" },
+                          "confirmed": { "type": "boolean", "example": true },
+                          "lang": { "type": "string", "example": "en" },
+                          "timezone": { "type": "string", "example": "Asia/Jakarta" },
+                          "mailformat": { "type": "integer", "example": 1 },
+                          "description": { "type": "string", "example": "Student" },
+                          "descriptionformat": { "type": "integer", "example": 1 },
+                          "city": { "type": "string", "example": "Lamongan" },
+                          "country": { "type": "string", "example": "ID" },
+                          "profileimageurlsmall": {
+                            "type": "string",
+                            "example": "https://elearning.unida.gontor.ac.id/theme/image.php/boost/core/1749352555/u/f2"
+                          },
+                          "profileimageurl": {
+                            "type": "string",
+                            "example": "https://elearning.unida.gontor.ac.id/theme/image.php/boost/core/1749352555/u/f1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Format body request tidak valid."
+          },
+          "404": {
+            "description": "Not Found."
+          },
+          "500": {
+            "description": "Terjadi kesalahan pada server."
+          }
+        }
+      }
+    },
+    "/moodle/courses/create-with-enrolment": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Buat course dan langsung enroll teacher",
+        "description": "membuat course + enroll course untuk yang membuat course tersebut",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCourseWithEnrollUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kursus berhasil di buat dan penggunal telah didaftarkan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "201"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Kursus berhasil di buat dan penggunal telah didaftarkan."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "course_id": {
+                          "type": "integer",
+                          "example": 10
+                        },
+                        "course_fullname": {
+                          "type": "string",
+                          "example": ""
+                        },
+                        "course_shortname": {
+                          "type": "string",
+                          "example": "ML 4"
+                        },
+                        "enrolled_user_id": {
+                          "type": "integer",
+                          "example": 30
+                        },
+                        "assign_role_id": {
+                          "type": "integer",
+                          "example": 3
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data yang dikirim tidak valid:"
+          },
+          "500": {
+            "description": "Terjadi kesalahan internal pada server."
+          }
+        }
+      }
+    },
+    "/moodle/courses/course": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Create one or more Moodle courses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleCreateCourseRequest"
+              },
+              "example": {
+                "courses": [
+                  {
+                    "fullname": "Pemrograman Go Lanjut 3",
+                    "shortname": "GO lanjut 3",
+                    "categoryid": 1,
+                    "idnumber": "GO208-2025",
+                    "summary": "Kelas lanjutan untuk belajar Go 3",
+                    "summaryformat": 1,
+                    "format": "topics",
+                    "lang": "en",
+                    "visible": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Courses created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string", "example": "200" },
+                    "message": { "type": "string", "example": "Courses created successfully" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "example": 9 },
+                          "shortname": { "type": "string", "example": "GO lanjut 3" },
+                          "fullname": { "type": "string", "example": "" },
+                          "categoryid": { "type": "integer", "example": 0 },
+                          "idnumber": { "type": "string", "example": "0" },
+                          "summary": { "type": "string", "example": "" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data yang dikirim tidak valid:"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/moodle/courses/enrol/manual": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Enroll users manually to a course",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleManualEnrolUsersRequest"
+              },
+              "example": {
+                "enrolments": [
+                  {
+                    "roleid": 5,
+                    "userid": 26,
+                    "courseid": 7,
+                    "timestart": 0,
+                    "timeend": 0,
+                    "suspend": 0
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Users enrolled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string", "example": "200" },
+                    "message": { "type": "string", "example": "Users enrolled successfully" },
+                    "data": { "type": "string", "example": "null" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data yang dikirim tidak valid."
+          },
+          "500": {
+            "description": "An internal error occurred"
+          }
+        }
+      }
+    },
+    "/moodle/roles/assign": {
+      "post": {
+        "tags": ["Roles"],
+        "summary": "Assign role to user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleRoleAssignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role assignment successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "example": "200"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User assigned successfully"
+                    },
+                    "data": {
+                      "type": "string",
+                      "example": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data yang dikirim tidak valid: "
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "MoodleSiteInfoResponse": {
+        "type": "object",
+        "properties": {
+          "sitename": { "type": "string" },
+          "username": { "type": "string" },
+          "firstname": { "type": "string" },
+          "lastname": { "type": "string" },
+          "fullname": { "type": "string" },
+          "lang": { "type": "string" },
+          "userid": { "type": "integer" },
+          "siteurl": { "type": "string" },
+          "userpictureurl": { "type": "string" },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "version": { "type": "string" }
+              }
+            }
+          },
+          "downloadFiles": { "type": "integer" },
+          "uploadFiles": { "type": "integer" },
+          "release": { "type": "string" },
+          "version": { "type": "string" },
+          "mobilecssurl": { "type": "string" },
+          "advancedfeatures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "value": { "type": "integer" }
+              }
+            }
+          },
+          "usercanmanageownfiles": { "type": "boolean" },
+          "userquota": { "type": "integer" },
+          "usermaxuploadfilesize": { "type": "integer" },
+          "userhomepage": { "type": "integer" },
+          "userhomepageurl": { "type": "string" },
+          "userprivateaccesskey": { "type": "string" },
+          "siteid": { "type": "integer" },
+          "sitecalendertype": { "type": "string" },
+          "usercalendertype": { "type": "string" },
+          "userissiteadmin": { "type": "boolean" },
+          "theme": { "type": "string" },
+          "limitconcurrentlogins": { "type": "integer" },
+          "usersessioncount": { "type": "integer" },
+          "policyagreed": { "type": "integer" }
+        }
+      },
+      "MoodleUserSyncRequest": {
+        "type": "object",
+        "required": ["username", "password", "first_name", "last_name", "email", "NIM", "roleid"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" },
+          "first_name": { "type": "string" },
+          "last_name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "NIM": { "type": "string" },
+          "roleid": {"type": "integer"}
+        }
+      },
+      "MoodleUserCreateRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "john.doe5" },
+          "auth": { "type": "string", "example": "manual" },
+          "password": { "type": "string", "example": "SecurePass123!" },
+          "firstname": { "type": "string", "example": "John" },
+          "lastname": { "type": "string", "example": "Doe 5" },
+          "email": { "type": "string", "example": "john.doe5@example.com" },
+          "city": { "type": "string", "example": "Lamongan" },
+          "country": { "type": "string", "example": "ID" },
+          "timezone": { "type": "string", "example": "Asia/Jakarta" },
+          "description": { "type": "string", "example": "Student" },
+          "idnumber": { "type": "string", "example": "442023611061" },
+          "lang": { "type": "string", "example": "en" },
+          "calendartype": { "type": "string", "example": "gregorian" },
+          "customfields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "example": "angkatan" },
+                "value": { "type": "string", "example": "2025" }
+              },
+              "required": ["type", "value"]
+            }
+          },
+          "preferences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "example": "auth_forcepasswordchange" },
+                "value": { "type": "string", "example": "true" }
+              },
+              "required": ["type", "value"]
+            }
+          }
+        },
+        "required": [
+          "username", "auth", "password", "firstname", "lastname", "email", "idnumber"
+        ]
+      },
+      "MoodleUserUpdateRequest": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "example": 22
+            },
+            "username": {
+              "type": "string",
+              "example": "john.doe1.update7"
+            },
+            "firstname": {
+              "type": "string",
+              "example": "John"
+            },
+            "lastname": {
+              "type": "string",
+              "example": "Doe1Update7"
+            },
+            "email": {
+              "type": "string",
+              "example": "john.doe1.update7@example.com"
+            },
+            "description": {
+              "type": "string",
+              "example": "Test update custom fields"
+            },
+            "customfields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "angkatan"
+                  },
+                  "value": {
+                    "type": "string",
+                    "example": "2025"
+                  }
+                }
+              }
+            },
+            "preferences": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "auth_forcepasswordchange"
+                  },
+                  "value": {
+                    "type": "string",
+                    "example": "true"
+                  }
+                }
+              }
+            }
+          },
+          "required": ["id", "username", "firstname", "lastname", "email"]
+        }
+      },
+      "CreateCourseWithEnrollUserRequest": {
+        "type": "object",
+        "properties": {
+          "courses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fullname": {"type": "string"},
+                "shortname": {"type": "string"},
+                "categoryid": {"type": "integer"},
+                "idnumber": {"type": "string"}
+              },
+              "required": ["fullname", "shortname", "categoryid", "idnumber"]
+            }
+          }
+        }
+      },
+      "MoodleUserLookupRequest": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "example": "id",
+            "description": "The field used to search users (e.g. id, username, email, idnumber)"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "35"
+            },
+            "description": "An array of values to search for in the specified field"
+          }
+        },
+        "required": ["field", "values"]
+      },
+      "MoodleRoleAssignRequest": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roleid": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "userid": {
+                  "type": "integer",
+                  "example": 22
+                },
+                "contextid": {
+                  "type": "integer",
+                  "example": 1
+                }
+              },
+              "required": ["roleid", "userid", "contextid"]
+            }
+          }
+        },
+        "required": ["assignments"]
+      },
+      "MoodleCreateCourseRequest": {
+        "type": "object",
+        "properties": {
+          "courses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fullname": { "type": "string", "example": "Pemrograman Go Lanjut 3" },
+                "shortname": { "type": "string", "example": "GO lanjut 3" },
+                "categoryid": { "type": "integer", "example": 1 },
+                "idnumber": { "type": "string", "example": "GO208-2025" },
+                "summary": { "type": "string", "example": "Kelas lanjutan untuk belajar Go 3" },
+                "summaryformat": { "type": "integer", "example": 1 },
+                "format": { "type": "string", "example": "topics" },
+                "lang": { "type": "string", "example": "en" },
+                "visible": { "type": "integer", "example": 1 }
+              },
+              "required": ["fullname", "shortname", "categoryid"]
+            }
+          }
+        }
+      },
+      "MoodleManualEnrolUsersRequest": {
+        "type": "object",
+        "properties": {
+          "enrolments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roleid": {
+                  "type": "integer",
+                  "example": 5,
+                  "description": "Role ID to assign to the user"
+                },
+                "userid": {
+                  "type": "integer",
+                  "example": 26,
+                  "description": "ID of the user to enrol"
+                },
+                "courseid": {
+                  "type": "integer",
+                  "example": 7,
+                  "description": "ID of the course to enrol the user into"
+                },
+                "timestart": {
+                  "type": "integer",
+                  "example": 0,
+                  "description": "Unix timestamp of when the enrolment starts"
+                },
+                "timeend": {
+                  "type": "integer",
+                  "example": 0,
+                  "description": "Unix timestamp of when the enrolment ends"
+                },
+                "suspend": {
+                  "type": "integer",
+                  "example": 0,
+                  "description": "Set to 1 to suspend the enrolment"
+                }
+              },
+              "required": ["roleid", "userid", "courseid"]
+            }
+          }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "data": { "type": "object", "nullable": true }
+        }
+      }
+    }
+  },
+  "security": [{ "ApiKeyAuth": [] }]
+}
