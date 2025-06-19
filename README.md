@@ -141,7 +141,7 @@ Swagger UI tersedia di:
 http://localhost:8080/swagger/index.html
 ```
 
-Swagger JSON spec: `./apispec.json`
+Atau import **Swagger JSON** spec: `./apispec.json` ke https://editor.swagger.io/
 
 ---
 
