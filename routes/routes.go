@@ -28,6 +28,7 @@ func SetupRouter(
 		protected.POST("/moodle/courses/course", moodleController.CoreCourseCreateCourses)
 		protected.POST("/moodle/courses/enrol/manual", moodleController.EnrolManualEnrolUsers)
 		protected.POST("/moodle/courses/create-with-enrolment", moodleController.CreateCourseWithEnrollUser)
+		protected.POST("/moodle/categories", moodleController.CoreCourseCreateCategories)
 
 		//swagger
 		protected.GET("/apispec.json", moodleController.ServeSwaggerSpec)

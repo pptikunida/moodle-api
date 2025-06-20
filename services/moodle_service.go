@@ -16,4 +16,5 @@ type MoodleService interface {
 	CoreCourseCreateCourses(req web.MoodleCoreCourseCreateCoursesRequest) ([]web.MoodleCoreCourseCreateCoursesResponse, error)
 	EnrolManualEnrolUsers(req web.MoodleManualEnrollRequest) error
 	CreateCourseWithEnrollUser(req web.MoodleCreateCourseWithEnrollUserRequest) (*web.MoodleCreateCourseWithEnrollUserResponse, error)
+	CoreCourseCreateCategories(req web.MoodleCreateCategoriesRequest) ([]web.MoodleCreateCategoriesResponse, error)
 }

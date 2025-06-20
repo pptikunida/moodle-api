@@ -557,3 +557,62 @@ func (s *MoodleServiceImpl) CreateCourseWithEnrollUser(req web.MoodleCreateCours
 
 	return finalResponse, nil
 }
+
+func (s *MoodleServiceImpl) CoreCourseCreateCategories(req web.MoodleCreateCategoriesRequest) ([]web.MoodleCreateCategoriesResponse, error) {
+	//load konfig moodle
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		return nil, fmt.Errorf("gagal mendapatkan konfigurasi Moodle: %w", err)
+	}
+
+	//form
+	form := helpers.NewMoodleForm(token, "core_course_create_categories")
+
+	//loop untuk banyak categories
+	for i, category := range req.Categories {
+		prefix := fmt.Sprintf("categories[%d]", i)
+
+		form.Set(prefix+"[name]", category.Name)
+		form.Set(prefix+"[parent]", strconv.Itoa(category.Parent))
+
+		if category.IDNumber != "" {
+			form.Set(prefix+"[idnumber]", category.IDNumber)
+		}
+		if category.Description != "" {
+			form.Set(prefix+"[description]", category.Description)
+		}
+		if category.DescriptionFormat != 0 {
+			form.Set(prefix+"[descriptionformat]", strconv.Itoa(category.DescriptionFormat))
+		}
+		if category.Theme != "" {
+			form.Set(prefix+"[theme]", category.Theme)
+		}
+	}
+
+	//kirim post ke moodl
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		return nil, fmt.Errorf("gagal memanggil Moodle untuk CreateCategories: %w", err)
+	}
+	defer resp.Body.Close()
+
+	//baca resp body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca body respons CreateCategories: %w", err)
+	}
+	log.Printf("[CreateCategories] Raw Response: %s", string(body))
+
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		return nil, &moodleErr
+	}
+
+	//jika tidak error
+	var result []web.MoodleCreateCategoriesResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("gagal unmarshal respons sukses CreateCategories: %w", err)
+	}
+
+	return result, nil
+}
