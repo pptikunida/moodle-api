@@ -700,20 +700,38 @@
       "CreateCourseWithEnrollUserRequest": {
         "type": "object",
         "properties": {
-          "courses": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "fullname": {"type": "string"},
-                "shortname": {"type": "string"},
-                "categoryid": {"type": "integer"},
-                "idnumber": {"type": "string"}
+          "course_data": {
+            "type": "object",
+            "properties": {
+              "fullname": {
+                "type": "string",
+                "example": "Pengantar Kecerdasan Buatan 2"
               },
-              "required": ["fullname", "shortname", "categoryid", "idnumber"]
-            }
+              "shortname": {
+                "type": "string",
+                "example": "ML 2"
+              },
+              "categoryid": {
+                "type": "integer",
+                "example": 1
+              },
+              "idnumber": {
+                "type": "string",
+                "example": "AI102-2025"
+              }
+            },
+            "required": ["fullname", "shortname", "categoryid", "idnumber"]
+          },
+          "user_id": {
+            "type": "integer",
+            "example": 46
+          },
+          "role_id": {
+            "type": "integer",
+            "example": 3
           }
-        }
+        },
+        "required": ["course_data", "user_id", "role_id"]
       },
       "MoodleUserLookupRequest": {
         "type": "object",
