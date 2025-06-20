@@ -31,20 +31,8 @@ API ini adalah middleware antara Sistem Informasi Akademik (SIAKAD) dengan Moodl
 │   └── web/
 │       ├── moodle_create_course_request.go
 │       ├── moodle_create_course_response.go
-│       ├── moodle_create_course_with_enroll_request.go
-│       ├── moodle_create_course_with_enroll_response.go
-│       ├── moodle_exception.go
-│       ├── moodle_manual_enroll_request.go
-│       ├── moodle_role_assigment_request.go
-│       ├── moodle_status_response.go
-│       ├── moodle_user_create_request.go
-│       ├── moodle_user_create_response.go
-│       ├── moodle_user_getByField_request.go
-│       ├── moodle_user_getByField_response.go
-│       ├── moodle_user_sync_request.go
-│       ├── moodle_user_update_request.go
-│       ├── moodle_user_update_response.go
 │       └── web_response.go       # Struktur umum response API
+|       └── dst....
 ├── README.md                     # Dokumentasi proyek
 ├── routes/
 │   └── routes.go                 # Definisi semua endpoint dan group route Gin
