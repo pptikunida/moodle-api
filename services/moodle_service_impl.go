@@ -683,3 +683,59 @@ func (s *MoodleServiceImpl) CoreCourseUpdateCategories(req web.MoodleUpdateCateg
 	log.Printf("[INFO] UpdateCategories: Operasi update kategori berhasil.")
 	return nil
 }
+
+func (s *MoodleServiceImpl) CoreCourseDeleteCategories(req web.MoodleDeleteCategoriesRequest) error {
+	//load konfig moodle
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		log.Printf("[ERROR] DeleteCategories: Gagal mendapatkan konfigurasi Moodle: %v", err)
+		return fmt.Errorf("gagal mendapatkan konfigurasi Moodle: %w", err)
+	}
+
+	//form
+	form := helpers.NewMoodleForm(token, "core_course_delete_categories")
+	log.Printf("[INFO] DeleteCategories: Memulai proses untuk menghapus %d kategori.", len(req.Categories))
+
+	for i, category := range req.Categories {
+		prefix := fmt.Sprintf("categories[%d]", i)
+		form.Set(prefix+"[id]", strconv.Itoa(category.ID))
+
+		if category.NewParent != nil {
+			form.Set(prefix+"[newparent]", strconv.Itoa(*category.NewParent))
+		}
+		if category.Recursive != nil {
+			form.Set(prefix+"[recursive]", strconv.Itoa(*category.Recursive))
+		}
+	}
+	log.Printf("[DEBUG] DeleteCategories: Form data yang akan dikirim:\n%s", form.Encode())
+
+	//kirim request
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		log.Printf("[ERROR] DeleteCategories: Gagal melakukan request ke Moodle: %v", err)
+		return fmt.Errorf("gagal memanggil Moodle untuk DeleteCategories: %w", err)
+	}
+	defer resp.Body.Close()
+
+	//baca response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[ERROR] DeleteCategories: Gagal membaca body respons: %v", err)
+		return fmt.Errorf("gagal membaca body respons DeleteCategories: %w", err)
+	}
+	log.Printf("[DEBUG] DeleteCategories Raw Response: %s", string(body))
+
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		log.Printf("[ERROR] DeleteCategories: Moodle mengembalikan error: %v", &moodleErr)
+		return &moodleErr
+	}
+
+	//periksa body
+	if bodyStr := string(body); bodyStr != "" {
+		log.Printf("[WARN] DeleteCategories: Moodle mengembalikan respons tak terduga: %s", bodyStr)
+	}
+
+	log.Printf("[INFO] DeleteCategories: Operasi hapus kategori berhasil.")
+	return nil
+}
