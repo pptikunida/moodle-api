@@ -616,3 +616,70 @@ func (s *MoodleServiceImpl) CoreCourseCreateCategories(req web.MoodleCreateCateg
 
 	return result, nil
 }
+
+func (s *MoodleServiceImpl) CoreCourseUpdateCategories(req web.MoodleUpdateCategoriesRequest) error {
+	//load moodle
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		log.Printf("[ERROR] UpdateCategories: Gagal mendapatkan konfigurasi Moodle: %v", err)
+		return fmt.Errorf("gagal mendapatkan konfigurasi Moodle: %w", err)
+	}
+
+	//form
+	form := helpers.NewMoodleForm(token, "core_course_update_categories")
+	log.Printf("[INFO] UpdateCategories: Memulai proses untuk %d kategori.", len(req.Categories))
+
+	//loop untuk categories
+	for i, category := range req.Categories {
+		prefix := fmt.Sprintf("categories[%d]", i)
+		form.Set(prefix+"[id]", strconv.Itoa(category.ID))
+		if category.Name != "" {
+			form.Set(prefix+"[name]", category.Name)
+		}
+		if category.IDNumber != "" {
+			form.Set(prefix+"[idnumber]", category.IDNumber)
+		}
+		// Untuk pointer, cek jika nilainya tidak nil
+		if category.Parent != nil {
+			form.Set(prefix+"[parent]", strconv.Itoa(*category.Parent))
+		}
+		if category.Description != "" {
+			form.Set(prefix+"[description]", category.Description)
+		}
+		if category.DescriptionFormat != nil {
+			form.Set(prefix+"[descriptionformat]", strconv.Itoa(*category.DescriptionFormat))
+		}
+		if category.Theme != "" {
+			form.Set(prefix+"[theme]", category.Theme)
+		}
+	}
+
+	// DEBUG LOG: Tampilkan data form yang akan dikirim
+	log.Printf("[DEBUG] UpdateCategories: Form data yang akan dikirim:\n%s", form.Encode())
+
+	//kirim post
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		log.Printf("[ERROR] UpdateCategories: Gagal melakukan request ke Moodle: %v", err)
+		return fmt.Errorf("gagal memanggil Moodle untuk UpdateCategories: %w", err)
+	}
+	defer resp.Body.Close()
+
+	//read resp body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[ERROR] UpdateCategories: Gagal membaca body respons: %v", err)
+		return fmt.Errorf("gagal membaca body respons UpdateCategories: %w", err)
+	}
+	log.Printf("[DEBUG] UpdateCategories Raw Response: %s", string(body))
+
+	//cek jika moodle mengembalikan error
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		log.Printf("[ERROR] UpdateCategories: Moodle mengembalikan error: %v", &moodleErr)
+		return &moodleErr
+	}
+
+	log.Printf("[INFO] UpdateCategories: Operasi update kategori berhasil.")
+	return nil
+}
