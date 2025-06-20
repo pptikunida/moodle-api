@@ -572,13 +572,35 @@
         "type": "object",
         "required": ["username", "password", "first_name", "last_name", "email", "NIM", "roleid"],
         "properties": {
-          "username": { "type": "string" },
-          "password": { "type": "string" },
-          "first_name": { "type": "string" },
-          "last_name": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "NIM": { "type": "string" },
-          "roleid": {"type": "integer"}
+          "username": {
+            "type": "string",
+            "example": "teacher.3"
+          },
+          "password": {
+            "type": "string",
+            "example": "Password123!"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Teacher"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "3"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "teacher.3@example.com"
+          },
+          "NIM": {
+            "type": "string",
+            "example": "442023611068"
+          },
+          "roleid": {
+            "type": "integer",
+            "example": 3
+          }
         }
       },
       "MoodleUserCreateRequest": {
