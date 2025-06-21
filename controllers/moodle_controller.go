@@ -434,6 +434,42 @@ func (s *MoodleController) CoreCourseDeleteCategories(c *gin.Context) {
 	})
 }
 
+func (s *MoodleController) CoreCourseGetCategories(c *gin.Context) {
+	var req web.MoodleGetCategoriesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ApiResponse{
+			Code:    "400",
+			Message: "Data yang dikirim tidak valid: " + err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	categories, err := s.moodleService.CoreCourseGetCategories(req)
+	if err != nil {
+		if moodleErr, ok := err.(*web.MoodleException); ok {
+			c.JSON(http.StatusBadRequest, web.ApiResponse{
+				Code:    moodleErr.ErrorCode,
+				Message: moodleErr.Message,
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, web.ApiResponse{
+			Code:    "500",
+			Message: "An internal error occurred",
+			Data:    err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, web.ApiResponse{
+		Code:    "200",
+		Message: "Kategori berhail ditemukan",
+		Data:    categories,
+	})
+}
+
 func (s *MoodleController) ServeSwaggerSpec(c *gin.Context) {
 	//baca file
 	file, err := os.ReadFile("./apispec.json")

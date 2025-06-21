@@ -31,6 +31,7 @@ func SetupRouter(
 		protected.POST("/moodle/categories", moodleController.CoreCourseCreateCategories)
 		protected.PUT("/moodle/categories", moodleController.CoreCourseUpdateCategories)
 		protected.DELETE("/moodle/categories", moodleController.CoreCourseDeleteCategories)
+		protected.GET("/moodle/categories/search", moodleController.CoreCourseGetCategories)
 
 		//swagger
 		protected.GET("/apispec.json", moodleController.ServeSwaggerSpec)
