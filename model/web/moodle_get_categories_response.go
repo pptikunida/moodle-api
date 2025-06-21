@@ -5,7 +5,7 @@ type MoodleGetCategoriesResponse struct {
 	Name              string `json:"name"`
 	IDNumber          string `json:"idnumber,omitempty"`
 	Description       string `json:"description"`
-	DescriptionFormat string `json:"descriptionformat"`
+	DescriptionFormat int    `json:"descriptionformat"`
 	Parent            int    `json:"parent"`
 	SortOrder         int    `json:"sortorder"`
 	CourseCount       int    `json:"coursecount"`
