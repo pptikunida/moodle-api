@@ -464,6 +464,7 @@
       "post": {
         "tags": ["Roles"],
         "summary": "Assign role to user",
+        "description": "roleid: 5 (Student), roleid: 3 (Teacher)",
         "requestBody": {
           "required": true,
           "content": {
@@ -501,6 +502,327 @@
           },
           "400": {
             "description": "Data yang dikirim tidak valid: "
+          }
+        }
+      }
+    },
+    "/moodle/categories": {
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Membuat kategori baru di Moodle",
+        "description": "parent == subkategori, parent: 0 (default parent / root parent)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleCreateCategoryRequest"
+              },
+              "example": {
+                "categories": [
+                  {
+                    "name": "Teknik Komputer",
+                    "parent": 0,
+                    "idnumber": "TK_2025",
+                    "description": "Kategori untuk program studi Teknik Komputer",
+                    "descriptionformat": 1,
+                    "theme": "boost"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kategori berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "201",
+                    "message": "Kategori berhasil dibuat",
+                    "data": [
+                      {
+                        "id": 8,
+                        "name": "Perbandingan Madzab"
+                      },
+                      {
+                        "id": 9,
+                        "name": "Teknologi Industri Pertanian"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "400",
+                    "message": "Field `categories` tidak boleh kosong",
+                    "data": null
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "500",
+                    "message": "An internal error occurred",
+                    "data": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update kategori Moodle",
+        "tags": ["Categories"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleUpdateCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kategori berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": "200",
+                  "message": "Kategori berhasil diperbarui",
+                  "data": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "400",
+                    "message": "Field `categories` tidak boleh kosong",
+                    "data": null
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "500",
+                    "message": "An internal error occurred",
+                    "data": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Hapus kategori Moodle",
+        "tags": ["Categories"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleDeleteCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kategori berhasil dihapus",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": "200",
+                  "message": "Kategori Berhasil Dihapus",
+                  "data": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "400",
+                    "message": "Field `categories` tidak boleh kosong",
+                    "data": null
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "500",
+                    "message": "An internal error occurred",
+                    "data": null
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/moodle/categories/search": {
+      "get": {
+        "summary": "Cari kategori Moodle berdasarkan kriteria tertentu",
+        "tags": ["Categories"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoodleSearchCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kategori berhasil ditemukan",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": "200",
+                  "message": "Kategori berhail ditemukan",
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Category 1",
+                      "description": "",
+                      "descriptionformat": 1,
+                      "parent": 0,
+                      "sortorder": 10000,
+                      "coursecount": 3,
+                      "visible": 1,
+                      "visibleold": 1,
+                      "timemodified": 1749352532,
+                      "depth": 1,
+                      "path": "/1"
+                    },
+                    {
+                      "id": 3,
+                      "name": "2025-2026 Ganjil",
+                      "idnumber": "FST_2025",
+                      "description": "Kategori untuk semua kursus di bawah Fakultas Sains dan Teknologi.",
+                      "descriptionformat": 1,
+                      "parent": 0,
+                      "sortorder": 20000,
+                      "coursecount": 0,
+                      "visible": 1,
+                      "visibleold": 1,
+                      "timemodified": 1750426627,
+                      "depth": 1,
+                      "path": "/3"
+                    },
+                    {
+                      "id": 5,
+                      "name": "Teknik Informatika",
+                      "idnumber": "TI_20251",
+                      "description": "",
+                      "descriptionformat": 1,
+                      "parent": 3,
+                      "sortorder": 30000,
+                      "coursecount": 0,
+                      "visible": 1,
+                      "visibleold": 1,
+                      "timemodified": 1750427007,
+                      "depth": 2,
+                      "path": "/3/5"
+                    },
+                    {
+                      "id": 4,
+                      "name": "2025-2026 Genap",
+                      "idnumber": "FSH_2025",
+                      "description": "",
+                      "descriptionformat": 1,
+                      "parent": 0,
+                      "sortorder": 40000,
+                      "coursecount": 0,
+                      "visible": 1,
+                      "visibleold": 1,
+                      "timemodified": 1750426627,
+                      "depth": 1,
+                      "path": "/4"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "400",
+                    "message": "Field `categories` tidak boleh kosong",
+                    "data": null
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "code": "500",
+                    "message": "An internal error occurred",
+                    "data": null
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -866,6 +1188,145 @@
               "required": ["roleid", "userid", "courseid"]
             }
           }
+        }
+      },
+      "MoodleCreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Nama kategori baru"
+                },
+                "parent": {
+                  "type": "integer",
+                  "description": "ID kategori induk. 0 untuk root category",
+                  "default": 0
+                },
+                "idnumber": {
+                  "type": "string",
+                  "description": "ID unik opsional untuk kategori ini"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Deskripsi opsional dari kategori"
+                },
+                "descriptionformat": {
+                  "type": "integer",
+                  "description": "Format deskripsi. 1=HTML, 0=MOODLE, 2=PLAIN, 4=MARKDOWN",
+                  "default": 1,
+                  "enum": [0, 1, 2, 4]
+                },
+                "theme": {
+                  "type": "string",
+                  "description": "Tema opsional jika fitur ini diaktifkan di Moodle"
+                }
+              },
+              "required": ["name", "parent"]
+            }
+          }
+        }
+      },
+      "MoodleUpdateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "name": { "type": "string" },
+                "idnumber": { "type": "string" },
+                "parent": { "type": "integer" },
+                "description": { "type": "string" },
+                "descriptionformat": {
+                  "type": "integer",
+                  "default": 1,
+                  "enum": [0, 1, 2, 4]
+                },
+                "theme": { "type": "string" }
+              },
+              "required": ["id"]
+            }
+          }
+        },
+        "example": {
+          "categories": [
+            {
+              "id": 9,
+              "name": "Agroteknologi"
+            }
+          ]
+        }
+      },
+      "MoodleDeleteCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "ID kategori yang akan dihapus"
+                },
+                "newparent": {
+                  "type": "integer",
+                  "description": "ID kategori induk baru jika konten ingin dipindah"
+                },
+                "recursive": {
+                  "type": "integer",
+                  "enum": [0, 1],
+                  "default": 0,
+                  "description": "1: hapus semua konten secara rekursif; 0: pindahkan ke parent"
+                }
+              },
+              "required": ["id"]
+            }
+          }
+        },
+        "example": {
+          "categories": [
+            {
+              "id": 9
+            }
+          ]
+        }
+      },
+      "MoodleSearchCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Kolom kategori untuk pencarian (contoh: id, ids, name, parent, idnumber, visible, theme)"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Nilai untuk dicocokkan dengan key"
+                }
+              },
+              "required": ["key", "value"]
+            }
+          }
+        },
+        "example": {
+          "criteria": [
+            {
+              "key": "parent",
+              "value": "0"
+            }
+          ]
         }
       },
       "ApiResponse": {
