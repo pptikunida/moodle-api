@@ -1,0 +1,16 @@
+services:
+  moodle-api:
+    build: .
+    image: moodle-api:1.0.0
+    container_name: moodle-api
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - ${HOST_API_PORT}:${CONT_API_PORT}
+    environment:
+      - MOODLE_URL=${MOODLE_URL}
+      - MOODLE_TOKEN=${MOODLE_TOKEN}
+      - APP_PORT=${APP_PORT}
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - APP_TIMEZONE=${APP_TIMEZONE}

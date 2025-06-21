@@ -9,13 +9,16 @@ import (
 	"github.com/rizkycahyono97/moodle-api/services"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-	// Load Env
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	// Load Env hanya di local bukan docker
+	if os.Getenv("APP_PORT") == "" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	httpClient := &http.Client{}
