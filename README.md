@@ -133,12 +133,36 @@ Atau import **Swagger JSON** spec: `./apispec.json` ke https://editor.swagger.io
 
 ---
 
+## 🛠️ Run Using Docker
+
+### 1. Build and Run with Docker
+Jika Anda ingin menjalankan aplikasi menggunakan Docker, ikuti langkah-langkah berikut:
+
+#### Build and Start Containers
+```bash
+docker compose build
+docker compose up -d
+```
+
+#### Stop Containers
+```bash
+docker compose down
+```
+
+### 2. Verify Running Containers
+Periksa status container:
+```bash
+docker ps
+```
+
+---
+
 ## 🧪 Testing API
 
 Gunakan Postman atau curl:
 
 ```bash
-curl -X POST http://localhost:8080/api/moodle/users/sync \
+curl -X POST http://localhost:8080/api/v1/moodle/users/sync \
   -H 'Content-Type: application/json' \
   -H 'X-API-Key: your_api_key' \
   -d '{ "username": "john.doe", "email": "...", ... }'
