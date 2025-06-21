@@ -19,4 +19,5 @@ type MoodleService interface {
 	CoreCourseCreateCategories(req web.MoodleCreateCategoriesRequest) ([]web.MoodleCreateCategoriesResponse, error)
 	CoreCourseUpdateCategories(req web.MoodleUpdateCategoriesRequest) error
 	CoreCourseDeleteCategories(req web.MoodleDeleteCategoriesRequest) error
+	CoreCourseGetCategories(req web.MoodleGetCategoriesRequest) ([]web.MoodleGetCategoriesResponse, error)
 }

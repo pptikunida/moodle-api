@@ -6,6 +6,6 @@ type CategoryGetData struct {
 }
 
 type MoodleGetCategoriesRequest struct {
-	Criteria         []CategoryData `json:"criteria,omitempty"`
-	AddSubcategories *int           `json:"addsubcategories,omitempty"`
+	Criteria         []CategoryGetData `json:"criteria,omitempty"`
+	AddSubcategories *int              `json:"addsubcategories,omitempty"`
 }

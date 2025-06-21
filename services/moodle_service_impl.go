@@ -739,3 +739,61 @@ func (s *MoodleServiceImpl) CoreCourseDeleteCategories(req web.MoodleDeleteCateg
 	log.Printf("[INFO] DeleteCategories: Operasi hapus kategori berhasil.")
 	return nil
 }
+
+func (s *MoodleServiceImpl) CoreCourseGetCategories(req web.MoodleGetCategoriesRequest) ([]web.MoodleGetCategoriesResponse, error) {
+	//load moodle
+	moodleURL, token, err := helpers.GetMoodleConfig()
+	if err != nil {
+		log.Printf("[ERROR] GetCategories: Gagal mendapatkan konfigurasi Moodle: %v", err)
+		return nil, fmt.Errorf("gagal mendapatkan konfigurasi Moodle: %w", err)
+	}
+
+	//siapkan form
+	form := helpers.NewMoodleForm(token, "core_course_get_categories")
+	log.Printf("[INFO] GetCategories: Memulai proses untuk mengambil data kategori.")
+
+	//loop untuk request
+	if len(req.Criteria) > 0 {
+		log.Printf("[INFO] GetCategories: Menerapkan %d kriteria pencarian.", len(req.Criteria))
+		for i, kriteria := range req.Criteria {
+			form.Set(fmt.Sprintf("criteria[%d][key]", i), kriteria.Key)
+			form.Set(fmt.Sprintf("criteria[%d][value]", i), kriteria.Value)
+		}
+	}
+	// opsional
+	if req.AddSubcategories != nil {
+		form.Set("addsubcategories", strconv.Itoa(*req.AddSubcategories))
+	}
+	log.Printf("[DEBUG] GetCategories: Form data yang akan dikirim:\n%s", form.Encode())
+
+	resp, err := s.client.PostForm(moodleURL, form)
+	if err != nil {
+		log.Printf("[ERROR] GetCategories: Gagal melakukan request ke Moodle: %v", err)
+		return nil, fmt.Errorf("gagal memanggil Moodle untuk GetCategories: %w", err)
+	}
+	defer resp.Body.Close()
+
+	//baca body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[ERROR] GetCategories: Gagal membaca body respons: %v", err)
+		return nil, fmt.Errorf("gagal membaca body respons GetCategories: %w", err)
+	}
+	log.Printf("[DEBUG] GetCategories Raw Response: %s", string(body))
+
+	//error moodle
+	var moodleErr web.MoodleException
+	if json.Unmarshal(body, &moodleErr) == nil && moodleErr.Exception != "" {
+		log.Printf("[ERROR] GetCategories: Moodle mengembalikan error: %v", &moodleErr)
+		return nil, &moodleErr
+	}
+
+	//jika bukan error
+	var result []web.MoodleGetCategoriesResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("gagal unmarshal respons sukses GetCategories: %w", err)
+	}
+
+	log.Printf("[INFO] GetCategories: Berhasil mendapatkan %d data kategori.", len(result))
+	return result, nil
+}
